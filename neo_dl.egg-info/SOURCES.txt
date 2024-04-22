@@ -1,9 +1,0 @@
-README.md
-setup.py
-neo-dl/__init__.py
-neo-dl/test.py
-neo_dl.egg-info/PKG-INFO
-neo_dl.egg-info/SOURCES.txt
-neo_dl.egg-info/dependency_links.txt
-neo_dl.egg-info/requires.txt
-neo_dl.egg-info/top_level.txt

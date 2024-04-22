@@ -1,0 +1,11 @@
+dist/*
+*.tar.gz
+*.whl
+build/
+*.egg-info/
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+*.tmp
+tmp/
