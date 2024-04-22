@@ -50,8 +50,3 @@ class LinearRegression:
         w, b = self.init_params(feature_size)
         w, b = self.gradient_descent(input, labels, sample_size, alpha, epochs, w, b)
         return w, b
-    
-
-
-
-    # gradient descent
