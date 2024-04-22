@@ -1,3 +1,4 @@
+# Ignore files and directories for development and testing
 dist/*
 *.tar.gz
 *.whl
@@ -5,8 +6,25 @@ build/
 *.egg-info/
 __pycache__/
 *.pyc
-.vscode/
-.idea/
 *.tmp
 tmp/
-dist/
+
+# Ignore files and directories for experimentation
+*.bak
+*.swp
+*.swo
+*.pyo
+
+# Ignore files and directories for debugging
+*.pdb
+*.pyd
+
+# Ignore files and directories for testing
+*_test.py
+test_*.py
+*.test
+test
+
+# Ignore IDE-specific files
+.vscode/
+.idea/
