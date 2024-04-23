@@ -18,8 +18,10 @@ _Currently in Development, I'll be adding as I learn how to build_
     - [ ]  Implement
     - [ ]  Write DocStrings
 
-**MISC**
+**Organize**
 
+- [ ]  Optimize performance of each model
+    - [ ]  Tune the operations and architecture (code)
 - [ ]  Implement scaling / standardization functions
 - [ ]  Ship ‘pip install neo-dl’ functionality once a stable version is released.
 - [ ]  Implement a utility function that allows for easy split of test/train of csv data.
