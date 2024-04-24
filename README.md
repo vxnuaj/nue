@@ -15,7 +15,7 @@ _Currently in Development, I'll be adding as I learn how to build_
     - [X]  Implement
     - [ ]  Write DocStrings
 - [ ]  Vanilla Neural Networks
-    - [ ]  Implement
+    - [X]  Implement
     - [ ]  Write DocStrings
 
 **Organize**
