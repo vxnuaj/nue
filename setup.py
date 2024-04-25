@@ -1,14 +1,15 @@
 # setup.py
 from setuptools import setup, find_packages
 
-VERSION = '0.0.1a1'
+VERSION = '0.0.1'
+DEFAULTV = '0.0.1'
 DESCRIPTION = 'A Deep Learning Package for Entry Level Tinkerers'
 
 setup(
-    name='neuo',
+    name='neu',
     version= VERSION,
-    default_version= VERSION,
-    packages=find_packages(),
+    default_version= DEFAULTV,
+    packages=find_packages(exclude = ['examples']),
     author='vxnuaj',
     author_email='jv.100420@gmail.com',
     description= DESCRIPTION,

@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import neuo.models.logreg as lr
+import neu.models.logreg as lr
 
 data = pd.read_csv('examples/data/randomtrain.csv')
 data = np.array(data)
