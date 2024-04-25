@@ -1,8 +1,8 @@
 # setup.py
 from setuptools import setup, find_packages
 
-VERSION = '0.0.1'
-DEFAULTV = '0.0.1'
+VERSION = '0.0.2'
+DEFAULTV = '0.0.2'
 DESCRIPTION = 'A Deep Learning Package for Entry Level Tinkerers'
 
 setup(
