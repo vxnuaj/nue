@@ -1,53 +1,61 @@
 import numpy as np
 
 class LinearRegression:
-    def __init__(self, input, labels, sample_size, feature_size, alpha, epochs):
+    def __init__(self, input, labels, num_features, alpha, epochs):
         self.input = input
         self.labels = labels
-        self.sample_size = sample_size
-        self.feature_size = feature_size
+        self.num_features = num_features
         self.alpha = alpha
         self.epochs = epochs
-            
+        self.params = []
+        self.gradients = []
+        self.pred = None
+
     def init_params(self):
-        w = np.random.randn(1, self.feature_size)
+        w = np.random.randn(1, self.num_features)
         b = np.random.randn(1, 1)
-        return w, b
+        self.params = w, b
+        return self.params
     
-    def forward(self, w, b):
-        pred = np.dot(w, self.input) + b
-        return pred
-
-    def mse(self, pred):
-        self.labels = np.clip(self.labels, -1e10, 1e10)
-        pred = np.clip(pred, -1e10, 1e10)
-        l = np.sum((self.labels - pred) ** 2) / self.sample_size
+    def forward(self):
+        w, b = self.params
+        self.pred = np.dot(w, self.input) + b
+        return self.pred
+    
+    def mse(self):
+        l = np.sum((self.labels - self.pred) ** 2) / self.labels.size
         return l
-
-    def backward(self, pred):
-        self.labels = np.clip(self.labels, -1e10, 1e10)
-        pred = np.clip(pred, -1e10, 1e10)
-        dw = np.dot((self.labels - pred), self.input.T) * 2 / self.sample_size
-        db = (np.sum(self.labels - pred )) * 2 / self.sample_size
-        return dw, db
     
-    def update(self, w, b, dw, db):
+    def backward(self):
+        dw = - np.dot((self.labels - self.pred), self.input.T) * (2/self.labels.size)
+        db = 2 * np.sum(self.labels - self.pred, axis = 0, keepdims = True ) / self.labels.size
+        self.gradients = dw, db
+        return self.gradients
+
+    def update(self):
+        dw, db = self.gradients
+        w, b = self.params
+
         w = w - self.alpha * dw
         b = b - self.alpha * db
-        return w, b
+        
+        self.params = w, b
+        return self.params
     
-    def gradient_descent(self, w, b):
+    def gradient_descent(self):
+        w, b = self.params
         for epoch in range(self.epochs):
-            pred = self.forward(w, b)
-            l = self.mse(pred)
-            dw, db = self.backward(pred)
-            w, b = self.update(w, b, dw, db)
+            self.pred = self.forward()
+            l = self.mse()
+            self.gradients = self.backward()
+            self.params = self.update()
 
             print(f"Epoch: {epoch}")
-            print(f"Loss: {l} \n")
-        return w, b
+            print(f"Loss: {l}")
+        
+        return self.params
     
     def model(self):
-        w, b = self.init_params()
-        w, b = self.gradient_descent(w, b)
-        return w, b
+        self.params = self.init_params()
+        self.params = self.gradient_descent()
+        return self.params

@@ -1,5 +1,4 @@
 import numpy as np
-
 class NN:
     def __init__(self, input, labels, num_features, num_classes, hidden_size, alpha, epochs):
         self.hidden_size = hidden_size
@@ -17,6 +16,7 @@ class NN:
         self.one_hot_y = None
         self.pred = None
         self.l = None
+        self.pred_label = None
     
     def init_params(self):
         w1 = np.random.rand(self.hidden_size, self.num_features) * np.sqrt(1 / self.num_features)
@@ -54,6 +54,11 @@ class NN:
         self.l = - np.sum(self.one_hot_y * np.log(self.pred)) / self.one_hot_y.shape[1]
         return self.l
     
+    def accuracy(self):
+        self.pred_label = np.argmax(self.pred, axis = 0)
+        acc = np.sum(self.pred_label == self.labels) / self.labels.size * 100
+        return acc
+
     def backward(self):
         z1, a1, _ = self.outputs
         _, _, w2, _ = self.params
@@ -78,18 +83,23 @@ class NN:
         b1 = b1 - self.alpha * db1
         self.params = w1, b1, w2, b2
         return self.params
+
     
     def gradient_descent(self):    
         self.one_hot_y = self.one_hot()
 
         for epoch in range(self.epochs):
             self.pred = self.forward()
+            
+            acc = self.accuracy()
+
             self.l = self.cat_cross_entropy()
             self.gradients = self.backward()
             self.params = self.update()
 
             print(f"Epoch: {epoch}")
-            print(f"Loss: {self.l}")
+            print(f"Accuracy: {acc}%")
+            print(f"Loss: {self.l}\n")
 
         return self.params
     
