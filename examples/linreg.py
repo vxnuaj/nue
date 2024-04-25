@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from neu.models import linreg
+from nue.models import linreg
 
 data = pd.read_csv('examples/data/linear_regression_dataset2.csv')
 data = np.array(data)

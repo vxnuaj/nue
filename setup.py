@@ -6,7 +6,7 @@ DEFAULTV = '0.0.1'
 DESCRIPTION = 'A Deep Learning Package for Entry Level Tinkerers'
 
 setup(
-    name='neu',
+    name='nue',
     version= VERSION,
     default_version= DEFAULTV,
     packages=find_packages(exclude = ['examples']),
