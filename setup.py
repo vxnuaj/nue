@@ -5,7 +5,7 @@ VERSION = '0.0.1a1'
 DESCRIPTION = 'A Deep Learning Package for Entry Level Tinkerers'
 
 setup(
-    name='neo-dl',
+    name='neo_dl',
     version= VERSION,
     default_version= VERSION,
     packages=find_packages(),
