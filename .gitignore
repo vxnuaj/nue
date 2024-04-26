@@ -28,15 +28,3 @@ test
 # Ignore IDE-specific files
 .vscode/
 .idea/
-
-# Ignore Sphinx build artifacts
-docs/source/_build/
-
-# Ignore Makefile and make.bat in the source directory
-docs/source/Makefile
-docs/source/make.bat
-
-#Ignoring some docs files
-docs/_build
-docs/_static
-docs/_templates
