@@ -6,6 +6,20 @@ A deep learning framework sculpted for seamless implementation of models, geared
 
 _Currently in Development, I'll be adding as I learn how to build_
 
+### Quickstart
+
+1. PIP it1
+
+```
+$ pip isntall nue
+```
+
+2. Test out any of the following models!
+
+- [Linear Regression](https://vxnuaj.github.io/nue/models.html#models-linreg)
+- [Logistic Regression](https://vxnuaj.github.io/nue/models.html#models-logreg)
+- [A Feedforward Neural Network for Classification](https://vxnuaj.github.io/nue/models.html#models-nn)
+
 ### **Phase 1**
 
 - [X]  Linear Regression Model
