@@ -1,4 +1,4 @@
-### Nue
+# Nue
 
 <img src='images/neuron.png'>
 
