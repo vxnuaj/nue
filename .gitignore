@@ -30,6 +30,6 @@ test
 .idea/
 
 #ignoring docs
-docs
-docs/*
-.docs
+origdocfiles
+origdocfiles/
+origdocfiles/*
