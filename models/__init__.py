@@ -13,7 +13,7 @@ Implement pre-built machine learning models with the call of a single function!
 
 .. code-block:: python
     
-    from nue import linreg, logreg, nn
+    from nue import nn
     
     # Pre-processing data
     data = pd.read_csv('examples/data/mnist_train.csv')
@@ -30,6 +30,6 @@ Implement pre-built machine learning models with the call of a single function!
 See more at the :doc:`examples`.
 """
 
-from .linreg import LinearRegression
-from .logreg import LogisticRegression
-from .nn import NN
+from models.linreg import LinearRegression
+from models.logreg import LogisticRegression
+from models.nn import NN

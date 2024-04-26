@@ -1,6 +1,6 @@
-### A Deep Learning Framework for Entry Level Tinkerers
+### Nue
 
-A Python Package for Seamless Usage and Implementation of Deep Learning Models
+A deep learning framework sculpted for seamless implementation of models, geared towards entry level learners.
 
 _Currently in Development, I'll be adding as I learn how to build_
 

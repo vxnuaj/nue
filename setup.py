@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 VERSION = '0.0.3'
 DEFAULTV = '0.0.3'
-DESCRIPTION = 'A Deep Learning Package for Entry Level Tinkerers'
+DESCRIPTION = 'A deep learning framework sculpted for seamless implementation of models, geared towards entry level learners. '
 
 setup(
     name='nue',
@@ -14,9 +14,9 @@ setup(
     author='vxnuaj',
     author_email='jv.100420@gmail.com',
     description= DESCRIPTION,
-    long_description=open('README.md').read(),
+    long_description=open('PYPI.md').read(),
     long_description_content_type='text/markdown',
-    url='https://github.com/vxnuaj/neuo',
+    url='https://github.com/vxnuaj/nue',
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',

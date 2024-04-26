@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from nue.models import nn
+from nue import nn
 
 ''' Pre-processing data '''
 

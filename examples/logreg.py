@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-import nue.models.logreg as lr
+
+from nue import logreg as lr
 
 ''' Pre processing data'''
 
