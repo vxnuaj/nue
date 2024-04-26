@@ -33,12 +33,5 @@ html_static_path = ['_static']
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 
-html_theme = 'alabaster'
-html_theme_options = {
-    'show_powered_by': False,
-    'show_relbar': False,
-    'show_searchbar': False,
-    'logo': 'logo.png',
-    'github_user': 'your-github-username',
-    'github_repo': 'your-github-repo-name',
-}
+html_theme = 'sphinxawesome_theme'
+extensions+= ["sphinxawesome_theme.highlighting"]

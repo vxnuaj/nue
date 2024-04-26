@@ -36,10 +36,10 @@ Quickstart
    :hidden:
    :caption: Main:
 
-   genindex
-   modindex
    setup
    examples
+   genindex
+   modindex
 
 .. toctree::
    :maxdepth: 2
