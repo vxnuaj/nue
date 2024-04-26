@@ -1,5 +1,7 @@
 ### Nue
 
+<img src='images/neuron.png'>
+
 A deep learning framework sculpted for seamless implementation of models, geared towards entry level learners.
 
 _Currently in Development, I'll be adding as I learn how to build_
