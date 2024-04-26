@@ -1,8 +1,8 @@
 # setup.py
 from setuptools import setup, find_packages
 
-VERSION = '0.0.3'
-DEFAULTV = '0.0.3'
+VERSION = '0.0.4'
+DEFAULTV = '0.0.4'
 DESCRIPTION = 'A deep learning framework sculpted for seamless implementation of models, geared towards entry level learners. '
 
 setup(
@@ -16,7 +16,7 @@ setup(
     description= DESCRIPTION,
     long_description=open('PYPI.md').read(),
     long_description_content_type='text/markdown',
-    url='https://github.com/vxnuaj/nue',
+    url='https://vxnuaj.github.io/nue/',
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
