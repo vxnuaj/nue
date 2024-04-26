@@ -29,9 +29,7 @@ test
 .vscode/
 .idea/
 
-#ignoring docsd
-.docs
-docs/
-docs/*
-/docs
+#ignoring docs
 docs
+docs/*
+.docs
