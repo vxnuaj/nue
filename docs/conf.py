@@ -24,8 +24,8 @@ release = '0.0.3'
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.todo', 'sphinx.ext.githubpages']
 
 templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-html_static_path = ['_static']
+exclude_patterns = ['Thumbs.db', '.DS_Store']
+html_static_path = ['_build/html/_static']
 
 
 
@@ -34,4 +34,3 @@ html_static_path = ['_static']
 
 
 html_theme = 'furo'
-html_theme_path = '[sphinx_rtd_theme.get_html_theme_path()]'
