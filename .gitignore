@@ -28,3 +28,10 @@ test
 # Ignore IDE-specific files
 .vscode/
 .idea/
+
+#ignoring docsd
+.docs
+docs/
+docs/*
+/docs
+docs
