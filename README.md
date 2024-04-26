@@ -20,6 +20,8 @@ $ pip isntall nue
 - [Logistic Regression](https://vxnuaj.github.io/nue/models.html#models-logreg)
 - [A Feedforward Neural Network for Classification](https://vxnuaj.github.io/nue/models.html#models-nn)
 
+>_See these [examples](https://vxnuaj.github.io/nue/examples.html) for sample usage_
+
 ### **Phase 1**
 
 - [X]  Linear Regression Model
