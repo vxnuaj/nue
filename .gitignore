@@ -33,3 +33,6 @@ test
 origdocfiles
 origdocfiles/
 origdocfiles/*
+
+#ignoring misc files
+banner.html
