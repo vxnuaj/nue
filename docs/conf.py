@@ -21,7 +21,7 @@ release = '0.0.3'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.todo', 'sphinx.ext.githubpages', 'furo']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.todo', 'sphinx.ext.githubpages']
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
@@ -34,4 +34,4 @@ html_static_path = ['_static']
 
 
 html_theme = 'furo'
-html_static_path = ['_static']
+html_theme_path = '[sphinx_rtd_theme.get_html_theme_path()]'

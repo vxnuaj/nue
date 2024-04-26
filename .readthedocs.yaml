@@ -12,3 +12,6 @@ sphinx:
 formats:
    - pdf
    - epub
+
+theme:
+  name: furo
