@@ -30,4 +30,4 @@ _Currently in Development, I'll be adding as I learn how to build_
 - [ ]  Functionality for securely storing params other than a pkl file
 - [ ]  Functionality for saving params securely other than a pkl file
 - [ ]  Implement Loading Bar whilst the model is training
-- [ ]  Implement __init__.py functionality under /neo_dl for ease of import for users.
+- [ ]  Implement __init__.py functionality under /nue for ease of import for users.
