@@ -25,7 +25,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.todo', 's
 
 templates_path = ['_templates']
 exclude_patterns = ['Thumbs.db', '.DS_Store']
-html_static_path = ['_build/html/_static']
+html_static_path = ['_static']
 
 
 
@@ -33,4 +33,12 @@ html_static_path = ['_build/html/_static']
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 
-html_theme = 'furo'
+html_theme = 'alabaster'
+html_theme_options = {
+    'show_powered_by': False,
+    'show_relbar': False,
+    'show_searchbar': False,
+    'logo': 'logo.png',
+    'github_user': 'your-github-username',
+    'github_repo': 'your-github-repo-name',
+}

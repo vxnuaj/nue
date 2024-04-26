@@ -14,4 +14,4 @@ formats:
    - epub
 
 theme:
-  name: 'furo'
+  name: alabaster
