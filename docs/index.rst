@@ -5,7 +5,9 @@
 
 Nue
 ===============================
-This is Nue! A deep learning framework designed for simple implementation of models, geared towards entry level learners.
+This is Nue! 
+
+A very high level deep learning framework sculpted for seamless implementation of models, geared towards entry level learners.
 
 Built with obsession by `vxnuaj <https://twitter.com/vxnuaj>`_
 
