@@ -8,7 +8,7 @@ _Currently in Development, I'll be adding as I learn how to build_
 
 ### Quickstart
 
-1. PIP it1
+1. PIP it!
 
 ```
 $ pip isntall nue
