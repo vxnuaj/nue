@@ -6,17 +6,15 @@ _Currently in Development, I'll be adding as I learn how to build_
 
 ### **Phase 1**
 
-**MAIN**
-
-- [ ]  Linear Regression Model
+- [X]  Linear Regression Model
     - [x]  Implement
-    - [ ]  Write DocStrings
-- [ ]  Logistic Regression Model
+    - [X]  Write DocStrings
+- [X]  Logistic Regression Model
     - [X]  Implement
-    - [ ]  Write DocStrings
-- [ ]  Vanilla Neural Networks
+    - [X]  Write DocStrings
+- [X]  Vanilla Neural Networks
     - [X]  Implement
-    - [ ]  Write DocStrings
+    - [X]  Write DocStrings
 
 **Organize**
 
