@@ -1,15 +1,16 @@
 # setup.py
 from setuptools import setup, find_packages
 
-VERSION = '0.0.2'
-DEFAULTV = '0.0.2'
+VERSION = '0.0.3'
+DEFAULTV = '0.0.3'
 DESCRIPTION = 'A Deep Learning Package for Entry Level Tinkerers'
 
 setup(
     name='nue',
     version= VERSION,
     default_version= DEFAULTV,
-    packages=find_packages(exclude = ['examples']),
+    packages=find_packages(exclude = ['examples', 'docs', 'dist', 'test']),
+    exclude_package_data={'': ['.gitignore', '.gitattributes']},
     author='vxnuaj',
     author_email='jv.100420@gmail.com',
     description= DESCRIPTION,
