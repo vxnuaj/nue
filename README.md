@@ -1,8 +1,6 @@
 # Nue
 
-<img src='images/neuron.png'>
-
-A deep learning framework sculpted for seamless implementation of models, geared towards entry level learners.
+**A Deep Learning framework sculpted for seamless implementation of models, geared towards entry level learners.**
 
 _Currently in Development, I'll be adding as I learn how to build_
 
@@ -21,6 +19,8 @@ $ pip isntall nue
 - [A Feedforward Neural Network for Classification](https://vxnuaj.github.io/nue/models.html#models-nn)
 
 >_See these [examples](https://vxnuaj.github.io/nue/examples.html) for sample usage_
+
+<img src = 'images/nue.png' width = 600>
 
 ### **Phase 1**
 
