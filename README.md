@@ -20,7 +20,7 @@ $ pip isntall nue
 
 >_See these [examples](https://vxnuaj.github.io/nue/examples.html) for sample usage_
 
-<img src = 'images/nue.png' width = 600>
+<img src = 'images/nue.png' width = 400>
 
 ### **Phase 1**
 
