@@ -2,7 +2,7 @@
 
 **A Deep Learning framework sculpted for seamless implementation of models, geared towards entry level learners.**
 
-> [DOCS](https://vxnuaj.github.io/nue/examples.html), [PYPI](https://pypi.org/project/nue/), [SAMPLES](https://vxnuaj.github.io/nue/examples.html)
+> [DOCS](https://vxnuaj.github.io/nue/), [PYPI](https://pypi.org/project/nue/), [SAMPLES](https://vxnuaj.github.io/nue/examples.html)
 
 _Currently in Development, I'll be adding as I learn how to build_
 
