@@ -1,4 +1,6 @@
-## Nue
+# Nue
+
+![](https://github.com/vxnuaj/nue/raw/gh-pages/images/neuron.png)
 
 A deep learning framework sculpted for seamless implementation of models, geared towards entry level learners.
 

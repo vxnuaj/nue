@@ -1,8 +1,8 @@
 # setup.py
 from setuptools import setup, find_packages
 
-VERSION = '0.0.4'
-DEFAULTV = '0.0.4'
+VERSION = '0.0.6'
+DEFAULTV = '0.0.6'
 DESCRIPTION = 'A deep learning framework sculpted for seamless implementation of models, geared towards entry level learners. '
 
 setup(
