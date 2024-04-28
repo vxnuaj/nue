@@ -58,9 +58,9 @@ class NN:
         :rtype: numpy.ndarray
         """
         w1, b1, w2, b2 = self.params
-        z1 = np.dot(w1, self.input)
+        z1 = np.dot(w1, self.input) + b1
         a1 = self.ReLU(z1)
-        z2 = np.dot(w2, a1)
+        z2 = np.dot(w2, a1) + b2
         self.pred = self.softmax(z2)
         self.outputs = z1, a1, z2
         return self.pred
