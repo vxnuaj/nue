@@ -1,6 +1,6 @@
 # Nue
 
-**A Deep Learning framework sculpted for seamless implementation of models, geared towards entry level learners.**
+**A Neural Network Library built in NumPy**
 
 > [DOCS](https://vxnuaj.github.io/nue/), [PYPI](https://pypi.org/project/nue/), [SAMPLES](https://vxnuaj.github.io/nue/examples.html)
 
