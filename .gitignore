@@ -36,3 +36,4 @@ origdocfiles/*
 
 #ignoring misc files
 banner.html
+.DS_Store

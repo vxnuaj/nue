@@ -3,11 +3,11 @@ import numpy as np
 class NN:
     """
 
-    :param input: The input data matrix of shape (m, n), where m is the number of samples and n is the number of features.
+    :param input: The input data matrix of shape (features, samples)
     :type input: numpy.ndarray
-    :param labels: The target labels of shape (m, 1).
+    :param labels: The target labels of shape (1, samples).
     :type labels: numpy.ndarray
-    :param num_features: The number of features in the input data.
+    :param num_features: The number of features in the input data.  
     :type num_features: int
     :param num_classes: The number of classes in the classification task.
     :type num_classes: int

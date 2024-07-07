@@ -30,6 +30,6 @@ Implement pre-built machine learning models with the call of a single function!
 See more at the :doc:`examples`.
 """
 
-from models.linreg import LinearRegression
-from models.logreg import LogisticRegression
-from models.nn import NN
+from nue.models.linreg import LinearRegression
+from nue.models.logreg import LogisticRegression
+from nue.models.nn import NN
