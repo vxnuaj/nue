@@ -16,13 +16,18 @@
 
 
 ## 1. Validate Pre-built Models
-- [ ] Linear Regression
-  - Validate that it has similar accuracy to sklearn
-- [ ] Logistic Regression
-  - Validate that it has similar accuracy to sklearn
-- [ ] Neural Network
-  - Attempt to work with different datasets (CIFAR, MNIST variations)
-- [ ] Refactor Examples once pre-built models are adjusted
+- [X] Linear Regression
+  - [X] Validate that it has similar accuracy to sklearn
+  - [X] Ensure that it is robust to different datasets
+  - [X] Update Examples
+  - [ ] Add fucnctionality to save params
+- [X] Logistic Regression
+  - [x] Validate that it has similar accuracy to sklearn (not sure if possible)
+  - [x] Ensure that it is robust to different datasets
+  - [x] Update Examples
+  - [ ] Add functionality to save params
+- [X] Neural Network
+  - [ ] Update Examples
 
 ## 2. Add Functionality for Custom Models
 ### 2.1 Initialization

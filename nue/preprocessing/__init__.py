@@ -4,4 +4,6 @@ Preprocessing functions
 
 '''
 
-from nue.preprocessing import io, data_split 
+from nue.preprocessing.io import *
+from nue.preprocessing.data_split import *
+from nue.preprocessing.encoding import *
