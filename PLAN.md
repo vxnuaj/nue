@@ -4,6 +4,9 @@
 - [X]  Linear Regression Model
     - [x]  Implement
     - [X]  Write DocStrings
+- [ ] OLS Regression Model | Perhaps integreate with regular linear regression, instead of runnning train() one could run model() instead and indicate in the __init__ that they want OLS.
+  - [ ] Implement
+  - [ ] Write DocStrings
 - [X]  Logistic Regression Model
     - [X]  Implement
     - [X]  Write DocStrings
@@ -74,6 +77,9 @@
 - [X] train_test_split
 - [X] x_y_split
 
+**MISC**
+
+- A Logger? For Trainign Runs?
 
 ****
 </details>

@@ -18,12 +18,16 @@ epochs = 100000
 
 ''' Instantiating the model '''
 
-model = LinearRegression(seed = 1)
+model = LinearRegression(modality = 'ols',  seed = 1)
 
 
 ''' Training and Testing the model '''
 
-model.train(X_train, Y_train, alpha, epochs, verbose = False)
+
+w, b = model.fit(X_train, Y_train)
+print(w.shape)
+
+'''model.train(X_train, Y_train, alpha, epochs, verbose = False)'''
 model.test(X_test, Y_test, verbose = False)
 
 
