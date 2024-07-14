@@ -98,7 +98,7 @@ class KNN():
                     self.predictions[index] = max_label     
         
      
-    def predict(self, X_test, Y_test=None, testing_size = 10, verbose = False):
+    def predict(self, X_test, Y_test, testing_size = 10, verbose = False):
         '''
         Inference of the KNN. Assumes that each row of `X_train` represents a sample.
       
@@ -124,7 +124,7 @@ class KNN():
         elif self.modality.lower() == '':
             self._predict_kd_tree()
             
-        print(f"Finished testing\n")
+        print(f"\nFinished testing\n")
 
         if verbose and Y_test is not None and Y_test.any():
             print(f"Accuracy: {self.accuracy(self.Y_test, self.predictions)}%")
