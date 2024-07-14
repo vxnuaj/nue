@@ -5,6 +5,9 @@ from nue.preprocessing import one_hot
 
 class NN:
     """
+
+    Neural Network Class. Currently, functionality is limited to MNIST-like image data, such as Fashion MNIST, CIFAR-10, CIFAR-100, etc. 
+    
     :param seed: Set the random seed for initializing parameters. Based on numpy.random.default_rng() 
     :type seed: int  
     """

@@ -9,18 +9,23 @@ class LinearRegression:
     :param seed: Set the random seed for initializing parameters. Based on numpy.random.default_rng() 
     :type seed: int 
     """
-    def __init__(self, seed:int = None):
+    def __init__(self, modality = 'ols', seed:int = None):
         self.X_train = np.empty(0) 
         self.Y_train = np.empty(0) 
-        self.alpha = .0001 
-        self.epochs = 50000
-        self.seed = seed
+        self.modality = modality 
+      
+       
+        if self.modality == 'sgd':
+            self.alpha = .0001 
+            self.epochs = 50000
+            self.seed = seed
 
-        self.__num_features = None
-        self.__params = []
-        self.__gradients = []
-   
-    
+            self.__num_features = None
+            self.__params = []
+            self.__gradients = []
+        elif modality == 'ols':
+            return 
+            
     def _init_params(self):
         """
         Initialize the parameters (weights and bias) for linear regression
@@ -123,7 +128,7 @@ class LinearRegression:
     
     def train(self, X_train:np.ndarray, Y_train: np.ndarray, alpha:float = .0001, epochs:int = 50000, verbose:bool=False, metric_freq:int = None): 
         """
-        Train the linear regression model.
+        Train the linear regression model via Gradient Descent.
 
            
         :param X_train: The input data of shape (features, samples)
@@ -151,9 +156,6 @@ class LinearRegression:
 
         self.X_train = X_train
         self.Y_train = Y_train  
-        self.alpha = alpha
-        self.epochs = epochs 
-        
         self.__num_features = X_train.shape[0]
 
         if not isinstance(verbose, bool): 
@@ -162,6 +164,22 @@ class LinearRegression:
         self.__params = self._init_params()
         self.__params = self._gradient_descent(verbose, metric_freq)
         return self.__params
+    
+    def fit(self, X_train:np.ndarray, Y_train:np.ndarray):
+        '''
+        Fit the model via Ordinary Least Squares 
+        '''
+        
+        eps = 1e-8 
+        
+        Y_mean = np.mean(Y_train)
+        X_mean = np.mean(X_train)
+
+        w = np.sum((X_train - X_mean) * (Y_train -Y_mean), axis = 0) / np.sum(np.square(X_train - X_mean) + eps, axis = 0) / X_train.shape[0]
+        b = np.sum(Y_mean - w * X_mean) / X_train.shape[0]
+        self.__params = w, b
+        return self.__params
+  
    
     def test(self, X_test:np.ndarray, Y_test:np.ndarray, verbose:bool = False):
         
@@ -186,7 +204,7 @@ class LinearRegression:
             raise ValueError("verbose must be type bool!")
        
         print("Model testing!") 
-        
+       
         w, b = self.__params
         pred = np.dot(w, X_test) + b 
         self.test_loss = mse(Y_test, pred)
@@ -237,6 +255,16 @@ class LinearRegression:
         if not isinstance(Y_train, np.ndarray):
             raise ValueError("Y_train must be type numpy.ndarray!") 
         self._Y_train = Y_train
+        
+    @property
+    def modality(self):
+        return self._modality
+    
+    @modality.setter
+    def modality(self, modality):
+        if modality not in ['gd', 'ols']:
+            raise ValueError("modality must be gradient descent (gd) or ordinary least squares (ols)!")
+        self._modality = modality
     
     @property
     def alpha(self):
