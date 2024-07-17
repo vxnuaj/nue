@@ -1,3 +1,4 @@
+import numpy as np
 from nue.models import SVM
 from nue.preprocessing import x_y_split, csv_to_numpy
 
@@ -11,14 +12,16 @@ X_test, Y_test = x_y_split(train_data, y_col = 'last')
 
 ''' Setting parameters '''
 
-alpha = .0001
-epochs = 1000
+alpha = .001
+epochs = 10000
 verbose = True
 seed = 0
+modality = 'soft'
+C = .1
 
 ''' Instantiating SVM '''
 
-model = SVM(seed = seed, modality = 'hard')
+model = SVM(seed = seed, modality = modality, C = C)
 
 ''' Training and Testing the SVM '''
 
