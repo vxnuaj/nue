@@ -1,19 +1,28 @@
 import numpy as np
-from nue.preprocessing import x_y_split
+from nue.metrics import svm_hinge_loss, svm_accuracy
 
 class SVM():
-    def __init__(self, seed:int = None):
+    def __init__(self, seed:int = None, modality = 'soft', C = .01):
        
         '''
         :param seed: Set the random seed for initializing parameters. Based on numpy.random.default_rng() 
-        :type seed: int         
+        :type seed: int
+        
+        :param modality: Set the modality for the SVM. Choose between soft and hard, for soft-margin and hard-margin respectively. 
+        :type modality: str 
+        
+        :param C: Set the regularization strength when using modality as 'soft'
+        :type C: float
         '''
-       
+
+        self.seed = seed
+        self.modality = modality 
+        self.C = C
+         
         self.X_train = np.empty(0)
         self.Y_train = np.empty(0)
         self.alpha = .0001
         self.epochs = 250
-        self.seed = seed
 
         self.__num_features = None
         self.__params = []
@@ -50,15 +59,6 @@ class SVM():
         self._output = np.dot(w, self.X_train) + b
         return self._output
 
-    def hinge_loss(self, z, y):
-        self.train_loss = np.sum(np.maximum(0, 1 - y * z)) / z.size
-        return self.train_loss
-   
-    def accuracy(self, y):
-        pred = np.sign(self._output) 
-        self.train_acc = np.sum(y == pred) / y.size * 100
-        return self.train_acc
-    
     def _backward(self):
         '''
         Compute the gradients for the parameters (w and b) with a backward pass.
@@ -66,11 +66,17 @@ class SVM():
         :return: List containing the gradients of the weights (dw) and bias (db)
         :rtype: list
         ''' 
-        
-        dz = np.maximum(0, -self.Y_train) 
-        dw = np.dot(dz, self.X_train.T) / self.Y_train.size
-        db = np.sum(dz) / self.Y_train.size
-        self.__gradients = [dw, db] 
+       
+        if self.modality == 'soft':  
+            dz = self.C * np.maximum(0, -self.Y_train) 
+            dw = np.dot(dz, self.X_train.T) / self.Y_train.size
+            db = np.sum(dz) / self.Y_train.size
+            self.__gradients = [dw, db] 
+        else:
+            dz = np.maximum(0, -self.Y_train) 
+            dw = np.dot(dz, self.X_train.T) / self.Y_train.size
+            db = np.sum(dz) / self.Y_train.size
+            self.__gradients = [dw, db] 
         return self.__gradients
     
     def _update(self):
@@ -100,13 +106,9 @@ class SVM():
         w, _ = self.__params 
 
         self._functional_margin = (self.Y_train * self._output).flatten()
-        print(self._functional_margin.shape) 
         min_indices = np.argpartition(self._functional_margin, k)[:k]
-        print(min_indices.shape) 
         self.support_vectors = self.X_train[:, min_indices]
-        print(self.support_vectors.shape)
         weight_norm = np.linalg.norm(w, ord = 2, axis = 1)
-        print(weight_norm.shape)
         if weight_norm == 0:
             raise ValueError("The norm of the weight vector is zero, cannot compute geometric margin.")
 
@@ -127,8 +129,8 @@ class SVM():
         for epoch in range(self.epochs):
             self._output = self._forward()
             
-            self.train_loss = self.hinge_loss(self._output, self.Y_train)
-            self.train_acc = self.accuracy(self.Y_train)
+            self.train_loss = svm_hinge_loss(self._output, self.Y_train, self.__params, self.modality, self.C)
+            self.train_acc = svm_accuracy(self.Y_train, self._output)
 
             self.__gradients = self._backward()
             self.__params = self._update()
@@ -210,8 +212,8 @@ class SVM():
         w, b = self.__params
         self._output = np.dot(w, X_test) + b
        
-        self.test_loss = self.hinge_loss(self._output, Y_test) 
-        self.test_acc = self.accuracy(Y_test)
+        self.test_loss = svm_hinge_loss(self._output, self.Y_test, self.__params, modality = 'hard')
+        self.test_acc = svm_accuracy(Y_test, self._output)
         
         print(f"Model tested!\n") 
         
@@ -240,12 +242,12 @@ class SVM():
             raise ValueError("verbose must be type bool!")
         
         w, b = self.__params
-        z = np.dot(w, X_inf) + b
+        self._output = np.dot(w, X_inf) + b
         
-        self.inf_loss = self.hinge_loss(z, Y_inf)
-        self.inf_acc = self.accuracy(self.Y_inf)
+        self.inf_loss = svm_hinge_loss(self._output, Y_inf, self.__params, modality = 'hard')
+        self.inf_acc = svm_accuracy(self.Y_inf, self._output)
 
-        self.pred = np.maximum(z, 0)        
+        self.pred = np.maximum(self._output, 0)        
 
         return self.pred
 
@@ -369,4 +371,25 @@ class SVM():
         if not isinstance(seed, int) and seed is not None:
             raise ValueError("seed must be type int or set as none!")
         self._seed = seed
+
+    @property
+    def modality(self):
+        return self._modality
+    
+    @modality.setter
+    def modality(self, modality):
+        if modality.lower() not in ['soft', 'hard']: 
+            raise ValueError("modality must be 'soft' or 'hard'!")
+        self._modality = modality
         
+    @property
+    def C(self):
+        return self._C
+    
+    @C.setter
+    def C(self, C):
+        if self.modality == 'hard':
+            self._C = None
+        else:
+            self._C = C
+    

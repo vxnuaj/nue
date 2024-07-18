@@ -34,3 +34,4 @@ from nue.models.linreg import LinearRegression
 from nue.models.logreg import LogisticRegression
 from nue.models.nn import NN
 from nue.models.knn import KNN
+from nue.models.svm import SVM

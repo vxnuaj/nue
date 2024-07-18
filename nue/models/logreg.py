@@ -20,21 +20,21 @@ class LogisticRegression:
 
     def _init_params(self):
         """
-        Initialize the parameters (weights and bias) for the logistic regression model.
+        Initialize the parameters (weights and bias) for the logistic regression model, based on the chosen seed in the init method.
    
-        :return: Tuple containing the weights (w) and bias (b).
-        :rtype: tuple
+        :return: List containing the weights (w) and bias (b).
+        :rtype: list
         """
         if self.seed == None: 
             w = np.random.rand(1, self.__num_features)
             b = np.zeros((1, 1))
-            self.__params == w, b 
+            self.__params.append(w, b) 
         else:   
             rng = np.random.default_rng(seed = self.seed)
             w = rng.normal(size = (1, self.__num_features)) 
             b = np.zeros((1, 1)) 
-            self.__params = w, b
-            
+            self.__params.append((w, b))
+
         return self.__params
 
     def sigmoid(self, z, eps = 1e-8):
@@ -46,8 +46,8 @@ class LogisticRegression:
         :return: The sigmoid of z.
         :rtype: float or numpy.ndarray
         """
-        self.pred = 1 / (1 + np.exp(-z + eps))
-        return self.pred
+        self.output = 1 / (1 + np.exp(-z + eps))
+        return self.output
 
     def _forward(self):
         """
@@ -58,29 +58,29 @@ class LogisticRegression:
         """
         w, b = self.__params
         z = np.dot(w, self.X_train) + b
-        self.pred = self.sigmoid(z)
-        return self.pred
+        self.output = self.sigmoid(z)
+        return self.output
     
     def _backward(self):
         """
         Perform a backward pass to calculate the gradients of the weights and bias.
 
-        :return: Tuple containing the gradients of the weights (dw) and bias (db).
-        :rtype: tuple
+        :return: List containing the gradients of the weights (dw) and bias (db).
+        :rtype: list
         """
         
-        dz = self.pred - self.Y_train 
+        dz = self.output - self.Y_train 
         dw = np.dot(dz, self.X_train.T)
         db = np.sum(dz) / self.Y_train.size
-        self.__gradients = dw, db
+        self.__gradients = [dw, db] 
         return self.__gradients
     
     def _update(self):
         """
         Update the weights and bias using gradient descent.
 
-        :return: Tuple containing the updated weights (w) and bias (b).
-        :rtype: tuple
+        :return: List containing the updated weights (w) and bias (b).
+        :rtype: list
         """
         dw, db = self.__gradients
         w, b = self.__params
@@ -88,23 +88,23 @@ class LogisticRegression:
         w -= self.alpha * dw
         b -= self.alpha * db
 
-        self.__params = w, b
+        self.__params = [w, b] 
         return self.__params
     
     def _gradient_descent(self, verbose:bool, metric_freq:int):
         """
         Perform gradient descent to train the logistic regression model.
 
-        :return: Tuple containing the final weights (w) and bias (b).
-        :rtype: tuple
+        :return: List containing the final weights (w) and bias (b).
+        :rtype: list
         """
         print(f"Model training!") 
         
         for epoch in range(self.epochs):
-            self.pred = self._forward()
+            self.output = self._forward()
 
-            self.train_loss = log_loss(self.Y_train, self.pred)
-            self.train_acc = logistic_accuracy(self.Y_train, self.pred)
+            self.train_loss = log_loss(self.Y_train, self.output)
+            self.train_acc = logistic_accuracy(self.Y_train, self.output)
 
             self.__gradients = self._backward()
             self.__params = self._update()
@@ -146,8 +146,8 @@ class LogisticRegression:
         
         :type metric_freq: int
 
-        :return: Tuple containing the final weights (w) and bias (b).
-        :rtype: tuple
+        :return: list containing the final weights (w) and bias (b).
+        :rtype: list
         """
        
         self.X_train = X_train
@@ -176,10 +176,9 @@ class LogisticRegression:
         :type verbose: bool  
         '''        
 
-        if not isinstance(X_test, np.ndarray):
-            raise ValueError("X_test must be type numpy.ndarray!")
-        if not isinstance(Y_test, np.ndarray):
-            raise ValueError("Y_test must be type numpy.ndarray!")
+        self.X_test = X_test
+        self.Y_test = Y_test
+
         if not isinstance(verbose, bool):
             raise ValueError("verbose must be type bool!")
 
@@ -197,6 +196,27 @@ class LogisticRegression:
         if verbose:
             print(f"Final test loss: {self.test_loss}")
             print(f"Final test accuracy: {self.test_acc}%\n") 
+  
+        return self.test_loss, self.test_acc
+   
+    def inference(self, X_inf:np.ndarray, Y_inf:np.ndarray, verbose:bool = False):
+        
+        self.X_inf = X_inf
+        self.Y_inf = Y_inf
+        
+        if not isinstance(verbose, bool):
+            raise ValueError("verbose must be type bool!") 
+        
+        w, b = self.__params
+        z = np.dot(w, X_inf) + b
+        a = self.sigmoid(z) 
+       
+        self.inf_loss = log_loss(Y_inf, a) 
+        self.inf_acc = logistic_accuracy(Y_inf, a)
+        
+        self.pred = np.round(a, decimals = 0) 
+       
+        return self.pred 
    
     
     def metrics(self, mode = 'train'):

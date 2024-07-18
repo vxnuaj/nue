@@ -16,3 +16,7 @@ def nn_accuracy(y, a):
     acc = np.sum(pred == y) / y.size * 100
     return acc
 
+def svm_accuracy(y, z):
+    pred = np.sign(z) 
+    acc = np.sum(y == pred) / y.size * 100
+    return acc

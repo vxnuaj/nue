@@ -4,9 +4,6 @@
 - [X]  Linear Regression Model
     - [x]  Implement
     - [X]  Write DocStrings
-- [ ] OLS Regression Model | Perhaps integreate with regular linear regression, instead of runnning train() one could run model() instead and indicate in the __init__ that they want OLS.
-  - [ ] Implement
-  - [ ] Write DocStrings
 - [X]  Logistic Regression Model
     - [X]  Implement
     - [X]  Write DocStrings
@@ -19,13 +16,16 @@
 
 
 ## 1. Validate Pre-built Models
-- [ ] Linear Regression
+- [X] Linear Regression
   - Validate that it has similar accuracy to sklearn
-- [ ] Logistic Regression
+- [X] Logistic Regression
   - Validate that it has similar accuracy to sklearn
-- [ ] Neural Network
+- [X] Neural Network
   - Attempt to work with different datasets (CIFAR, MNIST variations)
-- [ ] Refactor Examples once pre-built models are adjusted
+- [X] K Nearest Neighbors
+- [ ] Support Vector Machines
+- [X] Refactor Examples once pre-built models are adjusted
+
 
 ## 2. Add Functionality for Custom Models
 ### 2.1 Initialization
@@ -49,7 +49,6 @@
 - [ ] Add functionality for BCE
 - [ ] Add functionality for CCE
 - [ ] Add functionality for Smoothed CE
-- [ ] Add functionality for Sparse CE (optional)
 
 ### 2.6 Optimizers
 - [ ] Add functionality for Gradient Descent
