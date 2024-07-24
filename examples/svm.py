@@ -23,7 +23,7 @@ model = SVM(seed = seed, modality = 'hard')
 ''' Training and Testing the SVM '''
 
 model.train(X_train, Y_train, verbose = verbose)
-model.test(X_test, Y_test, verbose = verbose)
+model.test(X_test, Y_test, verbose = verbose) 
 
 ''' Support Vectors '''
 

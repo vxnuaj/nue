@@ -59,7 +59,19 @@ class KNN():
         return 
       
     def _predict_brute(self, testing_size, K, verbose):
-
+       
+        '''
+        Predict classes using the KNN model.
+        
+        :param testing_size: The sample size for the test set
+        :type testing_size: int
+        :param K: The nearest kth neighbors.
+        :type K: int
+        :param verbose: Set to True or False to set the verbosity of the prediction
+        :type verbose: bool
+        
+        '''
+        
         if testing_size == None:
             testing_size = self.X_test.shape[0]
             
@@ -121,8 +133,8 @@ class KNN():
         if self.modality.lower() == 'brute':
             self._predict_brute(testing_size, self.K, verbose) 
 
-        elif self.modality.lower() == '':
-            self._predict_kd_tree()
+        '''elif self.modality.lower() == '':
+            self._predict_kd_tree()'''
             
         print(f"\nFinished testing\n")
 

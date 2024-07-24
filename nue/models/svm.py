@@ -155,7 +155,7 @@ class SVM():
          
         :param X_train: The input data of shape (features, samples)
         :type X_train: numpy.ndarray
-        :param Y_train: The target labels of shape (1, samples). If binary, labels must be -1 or 1.
+        :param Y_train: The target labels of shape (1, samples). Binary, labels must be -1 or 1.
         :type Y_train: numpy.ndarray
         :param alpha: The learning rate for gradient descent
         :type alpha: float 
@@ -254,12 +254,10 @@ class SVM():
     def metrics(self, mode = 'train'):
         
         """
-       
         Prints the training and / or testing accuracy and loss for the model, dependent on `mode`
         
         :param mode: The metrics to be printed, defined by 'train', 'test', or 'both'
         :type mode: str
-        
         """ 
         
         if mode not in ['train', 'test', 'both']:
