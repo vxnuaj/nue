@@ -15,7 +15,7 @@
 <details> <summary> Phase 2</summary>
 
 
-## 1. Validate Pre-built Models
+## 1. Validate or add Models
 - [X] Linear Regression
   - Validate that it has similar accuracy to sklearn
 - [X] Logistic Regression
@@ -23,9 +23,10 @@
 - [X] Neural Network
   - Attempt to work with different datasets (CIFAR, MNIST variations)
 - [X] K Nearest Neighbors
-- [ ] Support Vector Machines
+- [X] Support Vector Machines
+- [X] Decision Trees
 - [X] Refactor Examples once pre-built models are adjusted
-
+- [ ] Custom Neural Networks
 
 ## 2. Add Functionality for Custom Models
 ### 2.1 Initialization

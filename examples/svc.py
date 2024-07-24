@@ -1,4 +1,3 @@
-import numpy as np
 from nue.models import SVM
 from nue.preprocessing import x_y_split, csv_to_numpy
 
