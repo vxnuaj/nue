@@ -27,7 +27,6 @@ def entropy(Y):
     _, freqs = np.unique(Y.flatten(), return_counts = True)
     probs = freqs / Y.size
     ent = - np.sum(probs * np.log(probs + eps))        
-
     return ent
 
 def gini(Y):
