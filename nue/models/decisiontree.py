@@ -1,6 +1,17 @@
 import numpy as np
 from nue.metrics import dt_accuracy, entropy, gini
 
+'''
+TODO
+
+To enable for soft voting ensemble methods, we can return a probability for the given classes in the current node rather than a definite class label.
+
+Therefore, 
+
+- We can implement, in the predict or _traverse function implement the option to return a probability, and then extend it to a soft voting ensemble.
+ 
+'''
+
 class Node():
     
     '''
@@ -146,7 +157,7 @@ class DecisionTree():
         :return type: Node instance
         '''
  
-        n_samples, n_feature = X.shape
+        n_samples, _ = X.shape
         n_labels = len(np.unique(Y))
        
         # Stopping Criteria 
@@ -248,8 +259,7 @@ class DecisionTree():
         
         :return: The information gain of the given split
         :rtype information_gain: float or int
-        ''' 
-        
+        '''         
         left_idxs, right_idxs = self._split(X_col, thresh)  
         
         n = len(Y)

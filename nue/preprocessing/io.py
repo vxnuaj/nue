@@ -13,17 +13,13 @@ def csv_to_numpy(file_path:str, delimiter:str = None, delim_whitespace:bool = Fa
     :type delim_whitespace: str
    
     :return: CSV file as an ndarray object
-    :rtype: numpy.ndarray in shape (features, samples) 
-    
-    
+    :rtype: numpy.ndarray in shape (samples, features) 
     '''
 
     if delim_whitespace == False: 
         data = pd.read_csv(file_path, delimiter = delimiter)
         data = np.array(data)
-        data=data.T
     elif delim_whitespace == True:
         data = pd.read_csv(file_path, delim_whitespace=True)
         data = np.array(data)
-        data = data.T
     return data

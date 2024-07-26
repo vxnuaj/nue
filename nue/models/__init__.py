@@ -36,3 +36,4 @@ from nue.models.nn import NN
 from nue.models.knn import KNN
 from nue.models.svm import SVM
 from nue.models.decisiontree import DecisionTree
+from nue.models.ensemble import VotingClassifier

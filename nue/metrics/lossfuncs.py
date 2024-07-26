@@ -8,7 +8,7 @@ def mse(y, pred):
     :return: Float defining the MSE metric.
     :rtype: float  
     '''
-
+     
     loss = np.sum(np.square(y - pred)) / y.size
     return loss
 

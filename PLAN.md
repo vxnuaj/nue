@@ -26,7 +26,20 @@
 - [X] Support Vector Machines
 - [X] Decision Trees
 - [X] Refactor Examples once pre-built models are adjusted
+- [ ] Majority Voting Implementation
+  - [ ] Make every model compatible with the dimensions (samples, features)
+    - [X] Linear Regression
+  - [ ] Hard Voting
+  - [ ] Soft Voting
+  - [ ] Implementing / Computing total error via binomial distribution (irreducible or overall error? I'm thinking overall.)
+  - [ ] Validate for all models.
+- [ ] Bagging Implementation
+  - [ ] Utility function (preprocessing) to draw samples from a uniform distribution.
+- [ ] Random Forest Implementation
+- [ ] Extra Random Forest Implementation
 - [ ] Custom Neural Networks
+
+
 
 ## 2. Add Functionality for Custom Models
 ### 2.1 Initialization
