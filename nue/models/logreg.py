@@ -10,13 +10,49 @@ class LogisticRegression:
     
         self.X_train = np.empty(0)
         self.Y_train = np.empty(0)
-        self.alpha = .0001
-        self.epochs = 250
+        
         self.seed = seed 
         
         self.__num_features = None
-        self.__params = []
-        self.__gradients = []
+        self.__params = None
+        self.__gradients = None
+        
+    def train(self, X_train:np.ndarray, Y_train:np.ndarray, alpha:float = .0001, epochs:int = 250, verbose:bool = False, metric_freq:int = None ):
+        """
+        Train the logistic regression model.
+
+        :param X_train: The input data of shape (samples, features)
+        :type X_train: numpy.ndarray
+        :param Y_train: The target labels of shape (samples, 1) or (samples, )
+        :type Y_train: numpy.ndarray
+        :param alpha: The learning rate for gradient descent
+        :type alpha: float 
+        :param epochs: The number of epochs for training
+        :type epochs: int
+
+        :param verbose: If True, will print out training progress of the model
+        :type verbose: bool
+        :param metric_freq: Will not apply if verbose is set to False. 
+      
+            Will print out epoch and loss at the epoch frequency set by metric_freq 
+        
+        :type metric_freq: int
+
+        :return: list containing the final weights (w) and bias (b).
+        :rtype: list
+        """
+       
+        self.X_train = X_train
+        self.Y_train = Y_train
+        self.alpha = alpha 
+        self.epochs = epochs
+        self.verbose_train = verbose
+
+        self.__num_features = X_train.shape[1]     
+       
+        self.__params = self._init_params()
+        self.__params = self._gradient_descent(verbose, metric_freq)
+        return self.__params 
 
     def _init_params(self):
         """
@@ -28,12 +64,13 @@ class LogisticRegression:
         if self.seed == None: 
             w = np.random.rand(1, self.__num_features)
             b = np.zeros((1, 1))
-            self.__params.append(w, b) 
+            
+            self.__params = [w, b] 
         else:   
             rng = np.random.default_rng(seed = self.seed)
             w = rng.normal(size = (1, self.__num_features)) 
             b = np.zeros((1, 1)) 
-            self.__params.append((w, b))
+            self.__params = [w, b]
 
         return self.__params
 
@@ -56,8 +93,9 @@ class LogisticRegression:
         :return: The predicted probabilities.
         :rtype: numpy.ndarray
         """
+        
         w, b = self.__params
-        z = np.dot(w, self.X_train) + b
+        z = np.dot(w, self.X_train.T) + b
         self.output = self.sigmoid(z)
         return self.output
     
@@ -68,9 +106,9 @@ class LogisticRegression:
         :return: List containing the gradients of the weights (dw) and bias (db).
         :rtype: list
         """
-        
-        dz = self.output - self.Y_train 
-        dw = np.dot(dz, self.X_train.T)
+       
+        dz = self.output - self.Y_train.T
+        dw = np.dot(dz, self.X_train)
         db = np.sum(dz) / self.Y_train.size
         self.__gradients = [dw, db] 
         return self.__gradients
@@ -103,8 +141,8 @@ class LogisticRegression:
         for epoch in range(self.epochs):
             self.output = self._forward()
 
-            self.train_loss = log_loss(self.Y_train, self.output)
-            self.train_acc = logistic_accuracy(self.Y_train, self.output)
+            self.train_loss = log_loss(self.Y_train.T, self.output)
+            self.train_acc = logistic_accuracy(self.Y_train.T, self.output)
 
             self.__gradients = self._backward()
             self.__params = self._update()
@@ -125,45 +163,6 @@ class LogisticRegression:
         
         return self.__params
     
-    def train(self, X_train:np.ndarray, Y_train:np.ndarray, alpha:float = .0001, epochs:int = 250, verbose:bool = False, metric_freq:int = None ):
-        """
-        Train the logistic regression model.
-
-        :param X_train: The input data of shape (features, samples)
-        :type X_train: numpy.ndarray
-        :param Y_train: The target labels of shape (1, samples)
-        :type Y_train: numpy.ndarray
-        :param alpha: The learning rate for gradient descent
-        :type alpha: float 
-        :param epochs: The number of epochs for training
-        :type epochs: int
-
-        :param verbose: If True, will print out training progress of the model
-        :type verbose: bool
-        :param metric_freq: Will not apply if verbose is set to False. 
-      
-            Will print out epoch and loss at the epoch frequency set by metric_freq 
-        
-        :type metric_freq: int
-
-        :return: list containing the final weights (w) and bias (b).
-        :rtype: list
-        """
-       
-        self.X_train = X_train
-        self.Y_train = Y_train
-        self.alpha = alpha 
-        self.epochs = epochs
-
-        self.__num_features = X_train.shape[0]     
-        
-        if not isinstance(verbose, bool):
-            raise ValueError("verbose must be type bool!")
-      
-        self.__params = self._init_params()
-        self.__params = self._gradient_descent(verbose, metric_freq)
-        return self.__params
-
     def test(self, X_test:np.ndarray, Y_test:np.ndarray, verbose:bool = False ):
         '''
         Test the logistic regression model
@@ -183,13 +182,13 @@ class LogisticRegression:
             raise ValueError("verbose must be type bool!")
 
         print("Model testing!")
-        
+       
         w, b = self.__params
-        z = np.dot(w, X_test) + b
+        z = np.dot(w, X_test.T) + b
         a = self.sigmoid(z) 
         
-        self.test_loss = log_loss(Y_test, a)
-        self.test_acc = logistic_accuracy(Y_test, a)
+        self.test_loss = log_loss(Y_test.T, a)
+        self.test_acc = logistic_accuracy(Y_test.T, a)
 
         print("Model tested!\n")         
 
@@ -211,8 +210,8 @@ class LogisticRegression:
         z = np.dot(w, X_inf) + b
         a = self.sigmoid(z) 
        
-        self.inf_loss = log_loss(Y_inf, a) 
-        self.inf_acc = logistic_accuracy(Y_inf, a)
+        self.inf_loss = log_loss(Y_inf.T, a) 
+        self.inf_acc = logistic_accuracy(Y_inf.T, a)
         
         self.pred = np.round(a, decimals = 0) 
        
@@ -255,8 +254,8 @@ class LogisticRegression:
     
     @X_train.setter
     def X_train(self, X_train):
-        if not isinstance(X_train, np.ndarray):
-            raise ValueError("X_train must be type numpy.ndarray!")
+        assert isinstance(X_train, np.ndarray), "X_train must be type numpy.ndarray!"
+        
         self._X_train = X_train
     
     @property
@@ -265,44 +264,50 @@ class LogisticRegression:
        
     @Y_train.setter
     def Y_train(self, Y_train):
-        if not isinstance(Y_train, np.ndarray):
-            raise ValueError("Y_train must be type numpy.ndarray!") 
+        assert isinstance(Y_train, np.ndarray), "Y_train must be of type numpy.ndarray!"
         self._Y_train = Y_train
-    
+
     @property
     def alpha(self):
-        return self._alpha 
-   
+        return self._alpha
+
     @alpha.setter
     def alpha(self, alpha):
-        if not isinstance(alpha, float):
-            raise ValueError("alpha must be type float!")
-        self._alpha = alpha     
-    
+        assert isinstance(alpha, (float, int)), "alpha must be of type float or int!"
+        self._alpha = alpha
+
     @property
     def epochs(self):
         return self._epochs
-    
+
     @epochs.setter
     def epochs(self, epochs):
-        if not isinstance(epochs, int):
-            raise ValueError("epochs must be type int!")
+        assert isinstance(epochs, int), "epochs must be of type int!"
         self._epochs = epochs
 
     @property
     def seed(self):
         return self._seed
-    
+
     @seed.setter
     def seed(self, seed):
-        if not isinstance(seed, int) and seed is not None:
-            raise ValueError("seed must be type int or set as none!")
+        assert isinstance(seed, int) or seed is None, "seed must be of type int or None!"
         self._seed = seed
-        
+
+    @property
+    def verbose_train(self):
+        return self._verbose_train
+
+    @verbose_train.setter
+    def verbose_train(self, verbose):
+        assert isinstance(verbose, bool), "verbose must be of type bool!"
+        self._verbose_train = verbose
+
 
     def __str__(self):
         if self.train_loss and not hasattr(self, 'test_loss'):
             return f"Train loss: {self.train_loss} | Train Accuracy: {self.train_acc}%"
         elif self.train_loss and hasattr(self, 'test_loss'):
             return f"Train loss: {self.train_loss} | Train Accuracy: {self.train_acc}%\nTest loss: {self.test_loss} | Test Accuracy: {self.test_acc}%"
+        
         

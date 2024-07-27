@@ -1,12 +1,25 @@
 import numpy as np
+from nue.metrics import knn_accuracy
 
 class KNN():
 
-    def __init__(self, K = 10, modality = 'brute', distance_metric:float = 2):
+    def __init__(self):
 
         '''
         Initialize the KNN. Currently works only for numerical labels.
+        ''' 
+       
+    def train(self, X_train, Y_train, K = 10, modality = 'brute', distance_metric:float = 2):
       
+        '''
+        Train the KNN (well not really, but you know...).
+        
+        :param X_train: The training data for the KNN of shape (samples, features)
+        :type X_train: numpy.ndarray 
+        
+        :param Y_train: The training labels corresponding to X_train
+        :type Y_train: numpy.ndarray
+        
         :param K: The K amount of neighbors to parse, when predicting classes.
         :type K: int 
        
@@ -19,43 +32,15 @@ class KNN():
         :param feature_dim: The index of the feature dimension to take the median of, when computing the 'kd-tree' algorithm 
         :type feature_dim: int
         '''
-        self.K = K
-        self.modality = modality
-        self.distance_metric = distance_metric 
-        self.X_train = None
-        self.dist_X_test = None
-       
-    def accuracy(self, Y_test, predictions):
-        
-        '''
-        Compute the accuracy of the model
-        
-        :param Y_test: The labels of the testing data
-        :type Y_test: numpy.ndarray
-        
-        :param predictions: The predictions of the KNN
-        :type predictions: numpy.ndarray 
-        
-        ''' 
-        acc = np.sum(Y_test == predictions) / Y_test.size * 100
-        return acc
-        
-    def fit(self, X_train, Y_train):
-      
-        '''
-        Fit the KNN.
-        
-        :param X_train: The training data for the KNN of shape (samples, features)
-        :type X_train: numpy.ndarray 
-        
-        :param Y_train: The training labels corresponding to X_train
-        :type Y_train: numpy.ndarray
-        '''
        
         self.Y_train = Y_train 
         self.X_train = X_train
+      
+        self.K = K
+        self.modality = modality
+        self.distance_metric = distance_metric  
         
-        print(f"Finished fitting\n") 
+        print(f"Finished training\n") 
         return 
       
     def _predict_brute(self, testing_size, K, verbose):
@@ -139,7 +124,7 @@ class KNN():
         print(f"\nFinished testing\n")
 
         if verbose and Y_test is not None and Y_test.any():
-            print(f"Accuracy: {self.accuracy(self.Y_test, self.predictions)}%")
+            print(f"Accuracy: {knn_accuracy(self.Y_test, self.predictions)}%")
         
         return self.predictions
    
@@ -150,7 +135,7 @@ class KNN():
         
         if not self.predictions: 
             raise ValueError("model has not yet been tested! run self.predict after running self.fit!")
-        print(self.accuracy(self.Y_test, self.predictions))
+        print(knn_accuracy(self.Y_test, self.predictions))
     
     @property
     def K(self):
@@ -158,7 +143,6 @@ class KNN():
     
     @K.setter
     def K(self, K):
-
         if not isinstance(K, int):
             raise ValueError("K must be type int!")
         elif K < 1: 
@@ -190,7 +174,4 @@ class KNN():
         elif distance_metric < 0:
             raise ValueError("the distance_metric can't be less than 0!")
         self._distance_metric = distance_metric
-        
-    def __str__(self):
-        return f"K: {self.K}\nModality: {self.modality}\nDistance Metric: {self.distance_metric}\n"
         

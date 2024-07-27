@@ -17,12 +17,19 @@ X_test, Y_test = X_test, Y_test.astype(int)
 
 max_depth = 1000
 min_sample_split = 2
+modality = 'entropy'
+
+alpha = .1
+verbose_1 = True
+verbose_2 = True
+return_prob = True
 
 ''' Instantiating model '''
 
-model = DecisionTree(max_depth = max_depth, min_sample_split = min_sample_split, modality = 'entropy')
+model = DecisionTree()
 
 ''' Training and testing the Decision Tree'''
 
-model.fit(X_train, Y_train, alpha = 1, verbose = True)
-model.predict(X_test, Y_test, verbose = True)
+model.train(X_train, Y_train, max_depth = max_depth, min_sample_split = min_sample_split, modality = modality, alpha = alpha, verbose = verbose_1)
+pred, probs = model.predict(X_train, Y_train, verbose = verbose_2, return_probs = True)
+

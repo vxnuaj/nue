@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-def train_test_split(data, train_split):
+def train_test_split(data, train_split, transpose = False):
     '''
     Function to split data into train and testing sets.
  
@@ -29,15 +29,21 @@ def train_test_split(data, train_split):
     train = data[:split_val, :]
     test = data[split_val:, :] 
 
+    if transpose:
+        train = train.T
+        test = test.T
+    
     return train, test
 
-def x_y_split(data, y_col = 'first'):
+def x_y_split(data, y_col = 'first', transpose = False):
     ''' 
     Function to split an array into labels and features 
     :param data: The data in numpy.ndarray format, assumed to be in (samples, features)
     :type data: numpy.ndarray
     :param y_col: The column index of the labels, y. Must be either the first or the last column
     :type y_col: str
+    :param inverse: Transposes the dataset prior to returning the splits
+    :type bool:
     
     :return X: The features, of shape (samples, features)
     :rtype X: numpy.ndarray
@@ -56,6 +62,10 @@ def x_y_split(data, y_col = 'first'):
     elif y_col.lower() == 'last':
         X = data[:, :-1]
         Y = data[:, -1].reshape(-1, 1)
+
+    if transpose:
+        X = X.T
+        Y = Y.T
 
     return X, Y 
       

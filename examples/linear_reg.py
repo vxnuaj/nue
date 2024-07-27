@@ -27,7 +27,7 @@ verbose_2 = True
 
 ''' Instantiating the model '''
 
-model = LinearRegression(modality = 'sgd',  seed = 1)
+model = LinearRegression(modality = 'ols',  seed = 1)
 
 ''' Training and Testing the model '''
 

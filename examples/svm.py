@@ -11,18 +11,20 @@ X_test, Y_test = x_y_split(train_data, y_col = 'last')
 
 ''' Setting parameters '''
 
-alpha = .0001
+alpha = .001
 epochs = 1000
 verbose = True
 seed = 0
+modality = 'soft'
+verbose = True
 
 ''' Instantiating SVM '''
 
-model = SVM(seed = seed, modality = 'hard')
+model = SVM(seed = seed)
 
 ''' Training and Testing the SVM '''
 
-model.train(X_train, Y_train, verbose = verbose)
+model.train(X_train, Y_train, modality = modality, alpha = alpha, epochs = epochs, verbose = verbose)
 model.test(X_test, Y_test, verbose = verbose) 
 
 ''' Support Vectors '''

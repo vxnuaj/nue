@@ -5,7 +5,6 @@ from nue.metrics import mse, r2_score
 class LinearRegression:
    
     """
-    
     :param seed: Set the random seed for initializing parameters. Based on numpy.random.default_rng() 
     :type seed: int 
     """

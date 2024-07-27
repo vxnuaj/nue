@@ -44,7 +44,7 @@ class ZNorm():
     
         return self._mean, self._std, self._var
     
-    def fit_normalize(self, data):
+    def fit_normalize(self, data, transpose = False):
        
         '''
         Fit and transform your dataset to the ZNorm Instance 

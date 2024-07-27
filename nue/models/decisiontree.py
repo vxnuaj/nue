@@ -1,133 +1,32 @@
 import numpy as np
 from nue.metrics import dt_accuracy, entropy, gini
 
-'''
-TODO
 
-To enable for soft voting ensemble methods, we can return a probability for the given classes in the current node rather than a definite class label.
-
-Therefore, 
-
-- We can implement, in the predict or _traverse function implement the option to return a probability, and then extend it to a soft voting ensemble.
- 
-'''
-
-class Node():
-    
-    '''
-    Initializes a Node of a Decision Tree. Primarily for internal use of the `DecisionTree` class. 
-   
-    :param value: The value of the node, if the Node is a leaf or pure node.
-    :type value: float or int 
-    :param left_node: The left node of the given Node instance. Recursively grown via the `DecisionTree._grow_tree()`
-    :type left_node: Node 
-    :param right_node: The right node of the given Node instance. Recursively grown via the `DecisionTree._grow_tree()`.
-    :type right_node: Node
-    :param feature: The optimal feature index for which to split the samples within the current Node
-    :type feature: int
-    :param threshold: The optimal threshold value, within the range of the optimal feature column vector, to split the current set of samples within the current Node, into left or right Nodes.
-    :type threshold: float or int
-    ''' 
-    
-    def __init__(self, value = None, left_node = None, right_node = None, feature = None, threshold = None):
-
-        self.value = value
-        self.left_node = left_node
-        self.right_node = right_node
-        self.feature = feature
-        self.threshold = threshold
-
-    def _is_leaf(self):
-        
-        '''
-        Assess if the current Node is a leaf node or not. 
-        
-        :return: A boolean value, True if self.value isn't None. Otherwise, if it is None, returns False 
-        :rtype: bool
-        ''' 
-        
-        return self.value is not None # Returns True if self.value isn't None. Otherwise, if it is None, returns False.
-
-    @property
-    def value(self):
-        return self._value
-    
-    @value.setter
-    def value(self, value):
-        if not isinstance(value, (float, np.floating, int, np.integer, type(None))):
-            raise ValueError('value must be type int or float.')
-        self._value = value
-   
-    @property
-    def left_node(self):
-        return self._left_node
-    
-    @left_node.setter
-    def left_node(self, left_node):
-        if not isinstance(left_node, (Node, type(None))):
-            raise ValueError('left_node must be an instance of Node.')
-        self._left_node = left_node        
-    
-    @property
-    def right_node(self):
-        return self._right_node
-    
-    @right_node.setter
-    def right_node(self, right_node):
-        if not isinstance(right_node, (Node, type(None))):
-            raise ValueError('right_node must be an instance of Node')
-        self._right_node = right_node
-        
-    @property
-    def feature(self):
-        return self._feature
-    
-    @feature.setter 
-    def feature(self, feature):
-        if not isinstance(feature, (int, type(None))):
-            raise ValueError('feature must be type int')
-        self._feature = feature 
-        
-    @property
-    def threshold(self):
-        return self._threshold
-    
-    @threshold.setter
-    def threshold(self, threshold):
-        if not isinstance(threshold, (float, np.floating, int, np.integer, type(None))):
-            raise ValueError('threshold must be type float or int or None.')
-        self._threshold = threshold
-         
 class DecisionTree():
     
     '''
     Initialize the DecisionTree. 
-    
-    :param max_depth: The maximum depth allowed in the decision tree.
-    :type max_depth: int
-    :param min_sample_split: The least amount of samples allowed for a Node to split
-    :type min_sample_split: int
-    :param modality: The modality for fitting the tree. Entropy is the default. Currently supports 'entropy' or 'gini' 
     ''' 
     
-    def __init__(self, max_depth, min_sample_split, modality = 'entropy'):
+    def __init__(self):
         
-        self.max_depth = max_depth
-        self.min_sample_split = min_sample_split 
-        self.modality = modality
-
         self.n_leaf = 0
         self.root = None 
 
-    def fit(self, X_train, Y_train, alpha = None, verbose = False):
+    def train(self, X_train, Y_train, max_depth = 100, min_sample_split = 2, modality = 'entropy', alpha = None, verbose = False):
        
         '''
-        Fit the Decision Tree.
+        Train the Decision Tree.
         
         :param X_train: The training data for the Decision Tree, of shape (samples, feature)
         :type X_train: numpy.ndarray
         :param Y_train: The labels for the corresponding X_train, of shape (samples, ) or (samples, 1)
-        :type X_train: numpy.ndarray
+        :type Y_train: numpy.ndarray
+        :param max_depth: The maximum depth allowed in the decision tree.
+        :type max_depth: int
+        :param min_sample_split: The least amount of samples allowed for a Node to split
+        :type min_sample_split: int
+        :param modality: The modality for fitting the tree. Entropy is the default. Currently supports 'entropy' or 'gini'  
         :param verbose: The verbosity for fitting the Decision Tree. If True, during training, expect a shit load of output.
         :type verbose: bool
         :param alpha: The cost complexity parameter, similar to regularization for lin, log, or nn
@@ -135,6 +34,9 @@ class DecisionTree():
         
         self.X_train = X_train
         self.Y_train = Y_train
+        self.max_depth = max_depth
+        self.min_sample_split = min_sample_split
+        self.modality = modality
         self.alpha = alpha
         self.verbose_fit = verbose
         
@@ -164,7 +66,7 @@ class DecisionTree():
         if (depth > self.max_depth or n_labels == 1 or n_samples < self.min_sample_split):
             self.n_leaf += 1
             leaf_value = self._most_common_label(Y)
-            return Node(value = leaf_value) 
+            return Node(value = leaf_value, Y = Y) 
          
         best_feat, best_thresh = self._best_split(X, Y)
        
@@ -177,7 +79,7 @@ class DecisionTree():
         
         if best_feat is None or best_thresh is None:
             leaf_value = self._most_common_label(Y)
-            return Node(value = leaf_value) 
+            return Node(value = leaf_value, Y = Y) 
         
         left_idxs, right_idxs = self._split(X[:, best_feat], best_thresh) 
      
@@ -189,7 +91,7 @@ class DecisionTree():
         left_node = self._grow_tree(X[left_idxs, :], Y[left_idxs], depth) 
         right_node = self._grow_tree(X[right_idxs, :], Y[right_idxs], depth) 
      
-        return Node(left_node = left_node, right_node = right_node, feature = best_feat, threshold = best_thresh) 
+        return Node(left_node = left_node, right_node = right_node, Y = Y, feature = best_feat, threshold = best_thresh) 
         
     def _best_split(self, X, Y):
        
@@ -302,8 +204,7 @@ class DecisionTree():
         most_common_index = np.argmax(counts)
         return unique_labels[most_common_index]
 
-
-    def predict(self, X_test, Y_test = None, verbose = False):
+    def predict(self, X_test, Y_test = None, verbose = False, return_probs = False):
         
         '''
         Predict a label given a set of testing samples and labels
@@ -320,15 +221,30 @@ class DecisionTree():
         self.X_test = X_test 
         self.Y_test = Y_test
         self.verbose_predict = verbose
+        self.return_probs = return_probs
 
-        pred = np.array([self._traverse(x) for x in X_test])
+        if self.return_probs:
+           
+            pred_and_prob = [self._traverse(x) for x in X_test]
+        
+            pred, probs = zip(*pred_and_prob)
+           
+            pred = np.array(pred)
+            probs = np.array(probs, dtype=object) 
+            
+        else:
+            pred = np.array([self._traverse(x) for x in X_test])
+
 
         self.test_acc = dt_accuracy(Y_test.flatten(), pred) 
        
         if self.verbose_predict:
             self.metrics()
-            
-        return pred
+
+        if self.return_probs:
+            return pred, probs
+        else:
+            return pred
 
     def _traverse(self, x):
         
@@ -350,8 +266,15 @@ class DecisionTree():
                 node = node.left_node
             elif x[node.feature] >= node.threshold:
                 node = node.right_node
+      
+        if self.return_probs:
+            _, freqs = np.unique(node.Y, return_counts=True) 
+            probs = freqs / len(node.Y) 
+            
+            return node.value, probs 
         
         return node.value
+    
        
     def metrics(self):
         print(f"\nTotal Leaf Nodes: {self.n_leaf}") 
@@ -436,3 +359,109 @@ class DecisionTree():
         if not isinstance(verbose_predict, bool):
             raise ValueError('verbose must be type bool')
         self._verbose_predict = verbose_predict 
+    
+    @property
+    def return_probs(self):
+        return self._return_probs    
+   
+    @return_probs.setter
+    def return_probs(self, return_probs):
+        assert isinstance(return_probs, bool), 'return_probs must be type bool'
+        self._return_probs = return_probs
+     
+        
+class Node():
+    
+    '''
+    Initializes a Node of a Decision Tree. Primarily for internal use of the `DecisionTree` class. 
+   
+    :param value: The value of the node, if the Node is a leaf or pure node.
+    :type value: float or int 
+    :param left_node: The left node of the given Node instance. Recursively grown via the `DecisionTree._grow_tree()`
+    :type left_node: Node 
+    :param right_node: The right node of the given Node instance. Recursively grown via the `DecisionTree._grow_tree()`.
+    :type right_node: Node
+    :param feature: The optimal feature index for which to split the samples within the current Node
+    :type feature: int
+    :param threshold: The optimal threshold value, within the range of the optimal feature column vector, to split the current set of samples within the current Node, into left or right Nodes.
+    :type threshold: float or int
+    ''' 
+    
+    def __init__(self, value = None, Y = None, left_node = None, right_node = None, feature = None, threshold = None):
+
+        self.value = value
+        self.Y = Y
+        self.left_node = left_node
+        self.right_node = right_node
+        self.feature = feature
+        self.threshold = threshold
+
+    def _is_leaf(self):
+        
+        '''
+        Assess if the current Node is a leaf node or not. 
+        
+        :return: A boolean value, True if self.value isn't None. Otherwise, if it is None, returns False 
+        :rtype: bool
+        ''' 
+        
+        return self.value is not None # Returns True if self.value isn't None. Otherwise, if it is None, returns False.
+
+    @property
+    def value(self):
+        return self._value
+    
+    @value.setter
+    def value(self, value):
+        if not isinstance(value, (float, np.floating, int, np.integer, type(None))):
+            raise ValueError('value must be type int or float.')
+        self._value = value
+  
+    @property
+    def Y(self):
+        return self._Y
+    
+    @Y.setter
+    def Y(self, Y):
+        assert isinstance(Y, (type(None), np.ndarray)), 'Y must be type numpy.ndarray.'
+        self._Y = Y
+   
+    @property
+    def left_node(self):
+        return self._left_node
+    
+    @left_node.setter
+    def left_node(self, left_node):
+        if not isinstance(left_node, (Node, type(None))):
+            raise ValueError('left_node must be an instance of Node.')
+        self._left_node = left_node        
+    
+    @property
+    def right_node(self):
+        return self._right_node
+    
+    @right_node.setter
+    def right_node(self, right_node):
+        if not isinstance(right_node, (Node, type(None))):
+            raise ValueError('right_node must be an instance of Node')
+        self._right_node = right_node
+        
+    @property
+    def feature(self):
+        return self._feature
+    
+    @feature.setter 
+    def feature(self, feature):
+        if not isinstance(feature, (int, type(None))):
+            raise ValueError('feature must be type int')
+        self._feature = feature 
+        
+    @property
+    def threshold(self):
+        return self._threshold
+    
+    @threshold.setter
+    def threshold(self, threshold):
+        if not isinstance(threshold, (float, np.floating, int, np.integer, type(None))):
+            raise ValueError('threshold must be type float or int or None.')
+        self._threshold = threshold

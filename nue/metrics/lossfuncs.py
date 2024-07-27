@@ -13,7 +13,8 @@ def mse(y, pred):
     return loss
 
 def log_loss(y, pred, eps = 1e-8):
-    loss = - np.mean(y * np.log(pred + eps) + (1 - y) * np.log(1 - pred + eps))  
+    
+    loss = - (np.sum(y * np.log(pred + eps) + (1 - y) * np.log(1 - pred + eps))) / y.size
     return loss
 
 def cce(one_hot_y, a, eps = 1e-8):

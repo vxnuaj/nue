@@ -27,8 +27,11 @@
 - [X] Decision Trees
 - [X] Refactor Examples once pre-built models are adjusted
 - [ ] Majority Voting Implementation
-  - [ ] Make every model compatible with the dimensions (samples, features)
+  - [X] Make every model compatible with the dimensions (samples, features)
     - [X] Linear Regression
+    - [X] Log Reg
+    - [X] KNN
+    - [X] SVM
   - [ ] Hard Voting
   - [ ] Soft Voting
   - [ ] Implementing / Computing total error via binomial distribution (irreducible or overall error? I'm thinking overall.)
