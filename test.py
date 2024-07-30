@@ -1,18 +1,33 @@
 import numpy as np
-from sklearn.metrics import log_loss as sklearn_log_loss
+import pprint
+from nue.preprocessing import x_y_split, train_test_split, csv_to_numpy
+from nue.models import SVM
 
-def log_loss(y, pred, eps=1e-8):
-    loss = - (np.sum(y * np.log(pred + eps) + (1 - y) * np.log(1 - pred + eps))) / y.size
-    return loss
+train = csv_to_numpy('data/ensembleTrain.csv')
+test = csv_to_numpy('data/ensembleTest.csv')
 
-# Example usage
-y = np.array([0, 1, 1, 0])
-pred = np.array([0.1, 0.9, 0.8, 0.4])
+X_train, Y_train = x_y_split(train, y_col = 'last')
+X_test, Y_test = x_y_split(test, y_col = 'last')
 
-# Your log loss implementation
-my_loss = log_loss(y, pred)
-print(f"My Log Loss: {my_loss}")
+svm = SVM(seed = 1)
 
-# Sklearn log loss implementation
-sklearn_loss = sklearn_log_loss(y, pred)
-print(f"Sklearn Log Loss: {sklearn_loss}")
+
+svm_train = {
+    
+    'svm!':svm,
+    'modality': 'soft',
+    'C': .01,
+    'alpha': .0001,
+    'epochs': 250,
+    'verbose': True,
+    'metric_freq': 1 
+
+}
+
+print(type(svm).__name__)
+
+svm_dict = {key:val for key, val in svm_train.items() if type(val).__name__!="SVM"}
+
+svm.train(X_train, Y_train, **svm_dict)
+
+#svm.train(X_train, Y_train, )

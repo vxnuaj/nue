@@ -1,28 +1,23 @@
 import numpy as np
 from nue.metrics import mse, r2_score
 
-
 class LinearRegression:
    
     """
-    :param seed: Set the random seed for initializing parameters. Based on numpy.random.default_rng() 
-    :type seed: int 
+    Initialize the Linear Regression model 
+    
+    :param seed: Set the random seed for initializing parameters, based on numpy.random.default_rng(). Only useful if using Stochastic Gradient Descent (sgd) as the training modality.
+    :type seed: int
+    :param verbose_train: Set the verbosity of the model during training
+    :type verbose_train: bool
+    :param verbose_test: Set the verbosity of the model during testing
+    :type verbose_test: bool
     """
-    def __init__(self, modality = 'ols', seed:int = None):
-        self.X_train = np.empty(0) 
-        self.Y_train = np.empty(0) 
-        self.modality = modality 
-      
-        if self.modality == 'sgd':
-            self.seed = seed
-
-            self.__num_features = None
-            self.__params = []
-            self.__gradients = []
-            
-        elif modality == 'ols':
-            return 
-            
+    def __init__(self, seed:int = None, verbose_train = False, verbose_test = False):
+        self.seed = seed  
+        self.verbose_train = verbose_train 
+        self.verbose_test = verbose_test
+ 
     def _init_params(self):
         """
         Initialize the parameters (weights and bias) for linear regression
@@ -42,7 +37,7 @@ class LinearRegression:
             self.__params = w, b 
         return self.__params
    
-    def train(self, X_train:np.ndarray, Y_train: np.ndarray, alpha:float = .0001, epochs:int = 50000, verbose:bool=False, metric_freq:int = None): 
+    def train(self, X_train:np.ndarray, Y_train: np.ndarray, modality = 'ols', alpha:float = .0001, epochs:int = 50000, metric_freq:int = 1): 
         """
         Train the linear regression model via Gradient Descent or Ordinary Least Squares, depending on the set modality.
 
@@ -50,6 +45,8 @@ class LinearRegression:
         :type X_train: numpy.ndarray
         :param Y_train: The target labels of shape (samples, 1)
         :type Y_train: numpy.ndarray
+        :param modality: Choose to train between Ordinary Least Squares (ols) or Stochastic Gradient Descent (sgd).
+        :type modality: str
         :param alpha: The learning rate for gradient descent
         :type alpha: float 
         :param epochs: The number of epochs for training
@@ -70,29 +67,22 @@ class LinearRegression:
 
         self.X_train = X_train
         self.Y_train = Y_train
-        self.verbose_train = verbose 
-       
-        if self.verbose_train and metric_freq is None: 
-            self.metric_freq = 1
-        elif self.verbose_train and metric_freq is not None:
-            self.metric_freq = metric_freq  
-        else:
-            self.metric_freq = metric_freq
-        
+        self.modality = modality
+        self.metric_freq = metric_freq
+      
         if self.modality == 'sgd':  
-   
             self.__num_features = X_train.shape[1]
             self.alpha = alpha
             self.epochs = epochs
-       
             self.__params = self._init_params()
-            self.__params = self._gradient_descent()
+            self.train_loss, self.train_r2, self.__params = self._gradient_descent()
        
         elif self.modality == 'ols':
-            
             self.__params = self._ols(Y_train, X_train)
-        
-        return self.__params
+       
+          
+          
+        return self.train_loss, self.train_r2, self.__params
     
     def _forward(self):
         """
@@ -134,7 +124,6 @@ class LinearRegression:
         b -=self.alpha * db
         
         self.__params = w, b
-        return self.__params
     
     def _gradient_descent(self):
         """
@@ -159,23 +148,23 @@ class LinearRegression:
             self.__gradients = self._backward()
             self.__params = self._update()
 
-            if self._verbose_train == True and self.metric_freq is not None: 
+            if self.verbose_train == True and self.metric_freq is not None: 
                 if epoch % self.metric_freq == 0:
                     print(f"Epoch: {epoch}") 
                     print(f"Loss: {self.train_loss}\n")
    
-    
         self.train_r2 = r2_score(self.Y_train, self._pred.T) 
          
-        print(f"Model trained!\n")
+        print(f"Finished Training!")
      
-        self.coef, self.intercept = [i.flatten() for i in self.__params]
+        self.weights, self.bias = [i.flatten() for i in self.__params]
        
-        if self._verbose_train == True: 
+        if self.verbose_train == True: 
             print(f"\nFinal Training Loss: {self.train_loss}")  
             print(f"Training R2 score: {self.train_r2}") 
-            print(f"Coefficients: {self.coef}\nIntercept: {self.intercept}\n")
-        return self.__params
+            print(f"weightsficients: {self.weights}\nbias: {self.bias}\n")
+
+        return self.train_loss, self.train_r2, self.__params
     
     def _ols(self, Y_train, X_train):
       
@@ -185,7 +174,11 @@ class LinearRegression:
         
         X_mean = np.mean(X_train, axis = 0)
         Y_mean = np.mean(Y_train, axis = 0)
-  
+ 
+        '''
+        TODO
+        - Need to add functionality for binary classification, if needed, using the alternate equation for OLS. 
+        '''
   
         X_train_adj = np.hstack([np.ones((X_train.shape[0], 1)), X_train])
 
@@ -196,21 +189,21 @@ class LinearRegression:
         self._pred = np.dot(w.T, X_train.T) + b
        
         self.__params = w, b
-        self.coef, self.intercept = [i.flatten() for i in self.__params]
+        self.weights, self.bias = w.T, b
      
         self.train_loss = mse(self.Y_train, self._pred.T)
         self.train_r2 = r2_score(self.Y_train, self._pred.T)
   
-        if self._verbose_train:
+        if self.verbose_train:
             print(f"\nFinal Training Loss: {self.train_loss}")
             print(f"Training R2 score: {self.train_r2}")
-            print(f"Coefficient: {self.coef}\nIntercept: {self.intercept}\n")
+            print(f"weightsficient: {self.weights}\nbias: {self.bias}\n")
   
-        print(f"Model trained!\n")
+        print(f"Model trained!")
    
-        return w, b
+        return w.T, b
     
-    def test(self, X_test:np.ndarray, Y_test:np.ndarray, verbose:bool = False):
+    def test(self, X_test:np.ndarray, Y_test:np.ndarray):
         
         '''
         Test the linear regression model.
@@ -219,15 +212,11 @@ class LinearRegression:
         :type X_test: numpy.ndarray
         :param Y_test: The validation labels, shape (samples, 1).
         :type Y_test: numpy.ndarray
-        :param verbose: If true, will print out loss and r2 score post-test.
-        :type verbose: bool
         ''' 
       
         self.X_test = X_test
         self.Y_test = Y_test
-        self.verbose_test = verbose 
-       
-       
+        
         print("Model testing!") 
        
         w, b = self.__params
@@ -242,8 +231,8 @@ class LinearRegression:
        
         print("Model tested!\n")
        
-        if verbose: 
-            print(f"Final Test loss: {self.test_loss}")
+        if self.verbose_test: 
+            print(f"Final Tst loss: {self.test_loss}")
             print(f"Test R2 score: {self.test_r2}") 
     
     def metrics(self, mode = 'train'):
@@ -258,13 +247,13 @@ class LinearRegression:
                 raise ValueError("You haven't trained the model yet!") 
             
             if mode == 'both': 
-                print(f"Train loss: {self.train_loss} | Train R2 score: {self.train_r2} \nTest loss: {self.test_loss} | Test R2 score: {self.test_r2}\nCoefficients: {self.coef} | Intercept: {self.intercept}") 
+                print(f"Train loss: {self.train_loss} | Train R2 score: {self.train_r2} \nTest loss: {self.test_loss} | Test R2 score: {self.test_r2}\nweightsficients: {self.weights} | bias: {self.bias}") 
             elif mode == 'test':
-                print(f"Test loss: {self.test_loss} | Test R2 score: {self.test_r2}\nCoefficients: {self.coef} | Intercept: {self.intercept}")
+                print(f"Test loss: {self.test_loss} | Test R2 score: {self.test_r2}\nweightsficients: {self.weights} | bias: {self.bias}")
         elif mode == 'train':
             if not hasattr(self, 'train_loss'):
                 raise ValueError("You haven't trained the model yet!")
-            print(f"Train Loss: {self.train_loss} | Train R2 score: {self.train_r2}\nCoefficients: {self.coef} | Intercept: {self.intercept}")
+            print(f"Train Loss: {self.train_loss} | Train R2 score: {self.train_r2}\nweightsficients: {self.weights} | bias: {self.bias}")
              
     @property
     def X_train(self):
@@ -359,7 +348,7 @@ class LinearRegression:
        
     @property
     def verbose_test(self):
-        return self._verbos_test
+        return self._verbose_test
     
     @verbose_test.setter
     def verbose_test(self, verbose_test):
@@ -369,7 +358,7 @@ class LinearRegression:
         
     def __str__(self):
         if self.train_loss and not hasattr(self, 'test_loss'):
-            return f"Train loss: {self.train_loss} | Train R2 score: {self.train_r2}\nCoefficients: {self.coef} | Intercept: {self.intercept} " 
+            return f"Train loss: {self.train_loss} | Train R2 score: {self.train_r2}\nweightsficients: {self.weights} | bias: {self.bias} " 
         elif self.train_loss and hasattr(self, 'test_loss'):
-            return f"Train loss: {self.train_loss} | Train R2 score: {self.train_r2} \nTest loss: {self.test_loss} | Test R2 score: {self.test_r2}\n Coefficients: {self.coef} | Intercept: {self.intercept}" 
+            return f"Train loss: {self.train_loss} | Train R2 score: {self.train_r2} \nTest loss: {self.test_loss} | Test R2 score: {self.test_r2}\n weightsficients: {self.weights} | bias: {self.bias}" 
         

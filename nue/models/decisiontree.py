@@ -8,12 +8,13 @@ class DecisionTree():
     Initialize the DecisionTree. 
     ''' 
     
-    def __init__(self):
+    def __init__(self, verbose_train = False, verbose_test = False):
         
+        self.verbose_train = verbose_train 
+        self.verbose_test = verbose_test
         self.n_leaf = 0
-        self.root = None 
 
-    def train(self, X_train, Y_train, max_depth = 100, min_sample_split = 2, modality = 'entropy', alpha = None, verbose = False):
+    def train(self, X_train, Y_train, max_depth = 100, min_sample_split = 2, modality = 'entropy', alpha = None):
        
         '''
         Train the Decision Tree.
@@ -27,10 +28,11 @@ class DecisionTree():
         :param min_sample_split: The least amount of samples allowed for a Node to split
         :type min_sample_split: int
         :param modality: The modality for fitting the tree. Entropy is the default. Currently supports 'entropy' or 'gini'  
-        :param verbose: The verbosity for fitting the Decision Tree. If True, during training, expect a shit load of output.
-        :type verbose: bool
         :param alpha: The cost complexity parameter, similar to regularization for lin, log, or nn
+        :type alpha: float or int
         '''
+       
+        print(f"Model Training!") 
         
         self.X_train = X_train
         self.Y_train = Y_train
@@ -38,11 +40,60 @@ class DecisionTree():
         self.min_sample_split = min_sample_split
         self.modality = modality
         self.alpha = alpha
-        self.verbose_fit = verbose
         
         self.root = self._grow_tree(self.X_train, self.Y_train)
-      
+    
+        self._orig_data_test()
+    
+        if self.verbose_train:
+            self.train_metrics() 
+     
+        print(f"Finished Training!") 
         
+        return self.train_acc, self.train_uncertainty
+      
+    def test(self, X_test, Y_test = None, return_probs = False):
+        
+        '''
+        Predict a label given a set of testing samples and labels
+        
+        :param X_test: The set of testing samples of shape (samples, features)
+        :type X_test: numpy.ndarray 
+        :param Y_test: The set of labels correpsonding to X_test of shape (samples, 1) or (samples, )
+        :type Y_test: numpy.ndarray
+        :param return_probs: Return the probabilities of a given class or classes at a leaf node.
+        :type return_probs: bool 
+        
+        :return pred: The predictions of the decision tree, for x in X_test
+        :rtype pred: numpy.ndarray
+        :return probs: The probabilities for the final set of classes at the leaf node. Only applicable if `self.return_probs = True`
+        :rtype probs: numpy.ndarray
+        ''' 
+        
+        self.X_test = X_test 
+        self.Y_test = Y_test
+        self.return_probs = return_probs
+
+        if self.return_probs:
+           
+            pred_and_prob = [self._traverse(x) for x in X_test]
+            pred, probs = zip(*pred_and_prob)
+            pred = np.array(pred)
+            probs = np.array(probs, dtype=object) 
+            
+        else:
+            pred = np.array([self._traverse(x) for x in X_test])
+
+        self.test_acc = dt_accuracy(Y_test.flatten(), pred) 
+       
+        if self.verbose_test:
+            self.test_metrics()
+        
+        if self.return_probs:
+            return pred, probs, self.test_acc, self.uncertainty
+        else:
+            return pred, self.test_acc, self.uncertainty
+    
     def _grow_tree(self, X, Y, depth = 0):
       
         '''
@@ -85,7 +136,7 @@ class DecisionTree():
      
         depth += 1
         
-        if self.verbose_fit:
+        if self.verbose_train:
             print(f"Tree Depth: {depth}") 
       
         left_node = self._grow_tree(X[left_idxs, :], Y[left_idxs], depth) 
@@ -204,47 +255,30 @@ class DecisionTree():
         most_common_index = np.argmax(counts)
         return unique_labels[most_common_index]
 
-    def predict(self, X_test, Y_test = None, verbose = False, return_probs = False):
-        
-        '''
-        Predict a label given a set of testing samples and labels
-        
-        :param X_test: The set of testing samples of shape (samples, features)
-        :type X_test: numpy.ndarray 
-        :param Y_test: The set of labels correpsonding to X_test of shape (samples, 1) or (samples, )
-        :type Y_test: numpy.ndarray
-        
-        :return: The predictions of the decision tree, for x in X_test
-        :rtype: numpy.ndarray
-        ''' 
-        
-        self.X_test = X_test 
-        self.Y_test = Y_test
-        self.verbose_predict = verbose
-        self.return_probs = return_probs
+    def _orig_data_test(self):
+        # should also be able to display the uncertainty for the original datset for the leaf node.
+        pred = np.array([self._orig_data_traverse(x) for x in self.X_train])
+        self.train_acc = dt_accuracy(self.Y_train.flatten(), pred)
+        return pred
 
-        if self.return_probs:
-           
-            pred_and_prob = [self._traverse(x) for x in X_test]
+    def _orig_data_traverse(self, x):
         
-            pred, probs = zip(*pred_and_prob)
-           
-            pred = np.array(pred)
-            probs = np.array(probs, dtype=object) 
-            
-        else:
-            pred = np.array([self._traverse(x) for x in X_test])
+        node = self.root
+   
+        while not node._is_leaf(): 
+        
+            if x[node.feature] < node.threshold:
+                node = node.left_node
+            elif x[node.feature] >= node.threshold:
+                node = node.right_node
+     
+        if self.modality == 'entropy':
+            self.train_uncertainty = entropy(node.Y)
+        elif self.modality == 'gini':
+            self.train_uncertainty = gini(node.Y) 
+             
+        return node.value
 
-
-        self.test_acc = dt_accuracy(Y_test.flatten(), pred) 
-       
-        if self.verbose_predict:
-            self.metrics()
-
-        if self.return_probs:
-            return pred, probs
-        else:
-            return pred
 
     def _traverse(self, x):
         
@@ -271,14 +305,26 @@ class DecisionTree():
             _, freqs = np.unique(node.Y, return_counts=True) 
             probs = freqs / len(node.Y) 
             
+             
             return node.value, probs 
+       
+        
+        if self.modality == 'entropy':
+            self.test_uncertainty = entropy(node.Y)
+        elif self.modality == 'gini':
+            self.test_uncertainty = gini(node.Y) 
         
         return node.value
-    
+      
+    def train_metrics(self):
+        print(f"\nTotal Leaf Nodes: {self.n_leaf} ☘︎")
+        print(f"Training Accuracy: {self.train_acc}%") 
+        print(f"Model Uncertianty: {self.uncertainty}")
        
-    def metrics(self):
-        print(f"\nTotal Leaf Nodes: {self.n_leaf}") 
-        print(f"Accuracy: {self.test_acc}%")
+    def test_metrics(self):
+        print(f"\nTotal Leaf Nodes: {self.n_leaf} ☘︎") 
+        print(f"Testing Accuracy: {self.test_acc}%")
+        print(f"Model Uncertainty: {self.uncertainty}")
        
     @property
     def X_train(self):
@@ -311,14 +357,14 @@ class DecisionTree():
         self._alpha = alpha 
        
     @property
-    def verbose_fit(self):
-        return self._verbose_fit
+    def verbose_train(self):
+        return self._verbose_train
     
-    @verbose_fit.setter
-    def verbose_fit(self, verbose_fit):
-        if not isinstance(verbose_fit, bool):
-            raise ValueError('verbose_fit must be type bool.')
-        self._verbose_fit = verbose_fit
+    @verbose_train.setter
+    def verbose_train(self, verbose_train):
+        if not isinstance(verbose_train, bool):
+            raise ValueError('verbose_train must be type bool.')
+        self._verbose_train = verbose_train
 
     @property
     def modality(self):

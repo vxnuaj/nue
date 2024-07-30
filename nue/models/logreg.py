@@ -3,21 +3,22 @@ import numpy as np
 
 class LogisticRegression:
     """
-    :param seed: Set the random seed for initializing parameters. Based on numpy.random.default_rng() 
-    :type seed: int  
-    """
-    def __init__(self, seed:int = None):
+    Initialize the Logistic Regression model. 
     
-        self.X_train = np.empty(0)
-        self.Y_train = np.empty(0)
-        
+    :param seed: Set the random seed for initializing parameters. Based on numpy.random.default_rng() 
+    :type seed: int 
+    :param verbose_train: Set the verbosity of the model during training
+    :type verbose_train: bool
+    :param verbose_test: Set the verbosity of the model during testing
+    :type verbose_test: bool 
+    """
+    def __init__(self, seed:int = None, verbose_train = False, verbose_test = False):
+    
         self.seed = seed 
-        
-        self.__num_features = None
-        self.__params = None
-        self.__gradients = None
-        
-    def train(self, X_train:np.ndarray, Y_train:np.ndarray, alpha:float = .0001, epochs:int = 250, verbose:bool = False, metric_freq:int = None ):
+        self.verbose_train = verbose_train
+        self.verbose_test = verbose_test 
+    
+    def train(self, X_train:np.ndarray, Y_train:np.ndarray, alpha:float = .0001, epochs:int = 250, metric_freq:int = None ):
         """
         Train the logistic regression model.
 
@@ -30,8 +31,6 @@ class LogisticRegression:
         :param epochs: The number of epochs for training
         :type epochs: int
 
-        :param verbose: If True, will print out training progress of the model
-        :type verbose: bool
         :param metric_freq: Will not apply if verbose is set to False. 
       
             Will print out epoch and loss at the epoch frequency set by metric_freq 
@@ -46,13 +45,50 @@ class LogisticRegression:
         self.Y_train = Y_train
         self.alpha = alpha 
         self.epochs = epochs
-        self.verbose_train = verbose
-
+        self.metric_freq = metric_freq
         self.__num_features = X_train.shape[1]     
-       
         self.__params = self._init_params()
-        self.__params = self._gradient_descent(verbose, metric_freq)
-        return self.__params 
+        self.train_loss, self.train_acc, self.__params = self._gradient_descent()
+        
+        return self.train_loss, self.train_acc, self.__params 
+
+    def test(self, X_test:np.ndarray, Y_test:np.ndarray, return_probs = False):
+        '''
+        Test the logistic regression model
+        
+        :param X_test: The validation features, shape (features, samples).
+        :type X_test: numpy.ndarray
+        :param Y_test: The validation labels, shape (1, samples).
+        :type Y_test: numpy.ndarray
+        '''        
+
+        self.X_test = X_test
+        self.Y_test = Y_test
+        self.return_probs = return_probs
+
+        print("Model testing!")
+       
+        w, b = self.__params
+        z = np.dot(w, X_test.T) + b
+        a = self.sigmoid(z) 
+        self.pred = np.round(a, decimals = 0)
+       
+        self.test_loss = log_loss(self.Y_test.T, a)
+        self.test_acc = logistic_accuracy(self.Y_test.T, a)
+
+        print("Model tested!\n")         
+
+        if self.verbose_test:
+            print(f"Final test loss: {self.test_loss}")
+            print(f"Final test accuracy: {self.test_acc}%\n") 
+
+        if self.return_probs:
+            self.pred, self.probs = self.inference(self.X_test, self.Y_test, self.verbose_test)
+            return self.test_loss, self.test_acc, self.pred, self.probs.flatten()
+        else:
+            self.pred = self.inference(self.X_test, self.Y_test)
+            return self.test_loss, self.test_acc, self.pred
+   
 
     def _init_params(self):
         """
@@ -64,14 +100,12 @@ class LogisticRegression:
         if self.seed == None: 
             w = np.random.rand(1, self.__num_features)
             b = np.zeros((1, 1))
-            
             self.__params = [w, b] 
-        else:   
+        else:
             rng = np.random.default_rng(seed = self.seed)
             w = rng.normal(size = (1, self.__num_features)) 
             b = np.zeros((1, 1)) 
             self.__params = [w, b]
-
         return self.__params
 
     def sigmoid(self, z, eps = 1e-8):
@@ -83,8 +117,8 @@ class LogisticRegression:
         :return: The sigmoid of z.
         :rtype: float or numpy.ndarray
         """
-        self.output = 1 / (1 + np.exp(-z + eps))
-        return self.output
+        self._output = 1 / (1 + np.exp(-z + eps))
+        return self._output
 
     def _forward(self):
         """
@@ -96,8 +130,8 @@ class LogisticRegression:
         
         w, b = self.__params
         z = np.dot(w, self.X_train.T) + b
-        self.output = self.sigmoid(z)
-        return self.output
+        self._output = self.sigmoid(z)
+        return self._output
     
     def _backward(self):
         """
@@ -107,8 +141,8 @@ class LogisticRegression:
         :rtype: list
         """
        
-        dz = self.output - self.Y_train.T
-        dw = np.dot(dz, self.X_train)
+        dz = self._output - self.Y_train.T
+        dw = np.dot(dz, self.X_train) / self.Y_train.size
         db = np.sum(dz) / self.Y_train.size
         self.__gradients = [dw, db] 
         return self.__gradients
@@ -129,75 +163,41 @@ class LogisticRegression:
         self.__params = [w, b] 
         return self.__params
     
-    def _gradient_descent(self, verbose:bool, metric_freq:int):
+    def _gradient_descent(self):
         """
         Perform gradient descent to train the logistic regression model.
 
         :return: List containing the final weights (w) and bias (b).
         :rtype: list
         """
-        print(f"Model training!") 
+        print(f"Model Training!") 
         
         for epoch in range(self.epochs):
-            self.output = self._forward()
+            self._output = self._forward()
 
-            self.train_loss = log_loss(self.Y_train.T, self.output)
-            self.train_acc = logistic_accuracy(self.Y_train.T, self.output)
+            self.train_loss = log_loss(self.Y_train.T, self._output)
+            self.train_acc = logistic_accuracy(self.Y_train.T, self._output)
 
             self.__gradients = self._backward()
             self.__params = self._update()
 
 
-            if verbose == True and metric_freq is not None:
-                if epoch % metric_freq == 0: 
+            if self.verbose_train == True and self.metric_freq is not None:
+                if epoch % self.metric_freq == 0: 
                     print(f"Epoch: {epoch}")
                     print(f"Loss: {self.train_loss}")
                     print(f"Accuracy: {self.train_acc}%\n")
-                    
-                    
-        print(f"Model trained!\n") 
         
-        if verbose == True:
+        self.weights, self.bias = [i for i in self.__params]            
+                    
+        print(f"Finished Training!") 
+        
+        if self.verbose_train == True:
             print(f"Final Training Loss: {self.train_loss}")
             print(f"Final Training Accuracy: {self.train_acc}%\n")
         
-        return self.__params
+        return self.train_loss, self.train_acc, self.__params
     
-    def test(self, X_test:np.ndarray, Y_test:np.ndarray, verbose:bool = False ):
-        '''
-        Test the logistic regression model
-        
-        :param X_test: The validation features, shape (features, samples).
-        :type X_test: numpy.ndarray
-        :param Y_test: The validation labels, shape (1, samples).
-        :type Y_test: numpy.ndarray
-        :param verbose: If true, will print out loss and r2 score post-test.
-        :type verbose: bool  
-        '''        
-
-        self.X_test = X_test
-        self.Y_test = Y_test
-
-        if not isinstance(verbose, bool):
-            raise ValueError("verbose must be type bool!")
-
-        print("Model testing!")
-       
-        w, b = self.__params
-        z = np.dot(w, X_test.T) + b
-        a = self.sigmoid(z) 
-        
-        self.test_loss = log_loss(Y_test.T, a)
-        self.test_acc = logistic_accuracy(Y_test.T, a)
-
-        print("Model tested!\n")         
-
-        if verbose:
-            print(f"Final test loss: {self.test_loss}")
-            print(f"Final test accuracy: {self.test_acc}%\n") 
-  
-        return self.test_loss, self.test_acc
-   
     def inference(self, X_inf:np.ndarray, Y_inf:np.ndarray, verbose:bool = False):
         
         self.X_inf = X_inf
@@ -207,15 +207,15 @@ class LogisticRegression:
             raise ValueError("verbose must be type bool!") 
         
         w, b = self.__params
-        z = np.dot(w, X_inf) + b
-        a = self.sigmoid(z) 
+        z = np.dot(w, self.X_inf.T) + b
+        self._output = self.sigmoid(z) 
        
-        self.inf_loss = log_loss(Y_inf.T, a) 
-        self.inf_acc = logistic_accuracy(Y_inf.T, a)
+        self.inf_loss = log_loss(self.Y_inf.T, self._output) 
+        self.inf_acc = logistic_accuracy(self.Y_inf.T, self._output)
         
-        self.pred = np.round(a, decimals = 0) 
+        self.pred = np.round(self._output, decimals = 0) 
        
-        return self.pred 
+        return self.pred, self._output
    
     
     def metrics(self, mode = 'train'):
@@ -265,7 +265,29 @@ class LogisticRegression:
     @Y_train.setter
     def Y_train(self, Y_train):
         assert isinstance(Y_train, np.ndarray), "Y_train must be of type numpy.ndarray!"
+        if np.any(Y_train == -1):
+            Y_train = np.where(Y_train == -1, 0, 1)  
         self._Y_train = Y_train
+
+    @property
+    def X_test(self):
+        return self._X_test
+    
+    @X_test.setter
+    def X_test(self, X_test):
+        assert isinstance(X_test, np.ndarray), "X_test must be type numpy.ndarray!"
+        self._X_test = X_test
+    
+    @property
+    def Y_test(self):
+        return self._Y_test  
+       
+    @Y_test.setter
+    def Y_test(self, Y_test):
+        assert isinstance(Y_test, np.ndarray), "Y_train must be of type numpy.ndarray!"
+        if np.any(Y_test == -1):
+            Y_test = np.where(Y_test == -1, 0, 1)  
+        self._Y_test = Y_test
 
     @property
     def alpha(self):

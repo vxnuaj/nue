@@ -3,11 +3,16 @@ from nue.metrics import knn_accuracy
 
 class KNN():
 
-    def __init__(self):
+    '''
+    Initialize the KNN. Currently works only for numerical labels.
+    
+    :param verbose_test: Set the verbosity during testing
+    :type verbose_test: bool
+    ''' 
 
-        '''
-        Initialize the KNN. Currently works only for numerical labels.
-        ''' 
+
+    def __init__(self, verbose_test = False):
+        self.verbose_test = verbose_test
        
     def train(self, X_train, Y_train, K = 10, modality = 'brute', distance_metric:float = 2):
       
@@ -32,6 +37,8 @@ class KNN():
         :param feature_dim: The index of the feature dimension to take the median of, when computing the 'kd-tree' algorithm 
         :type feature_dim: int
         '''
+        
+        print(f"Model Training!")
        
         self.Y_train = Y_train 
         self.X_train = X_train
@@ -40,10 +47,9 @@ class KNN():
         self.modality = modality
         self.distance_metric = distance_metric  
         
-        print(f"Finished training\n") 
-        return 
+        print(f"Finished Training!") 
       
-    def _predict_brute(self, testing_size, K, verbose):
+    def _predict_brute(self, testing_size, K):
        
         '''
         Predict classes using the KNN model.
@@ -52,8 +58,6 @@ class KNN():
         :type testing_size: int
         :param K: The nearest kth neighbors.
         :type K: int
-        :param verbose: Set to True or False to set the verbosity of the prediction
-        :type verbose: bool
         
         '''
         
@@ -70,7 +74,7 @@ class KNN():
 
         for index, test_row in enumerate(self.X_test): 
         
-            if verbose == True:
+            if self.verbose_test == True:
                 print(f"Sample: {index}")
             
             distances = np.linalg.norm(self.X_train - test_row, ord = self.distance_metric, axis = 1) # Takes the difference in L2 size of X_train and the testing data
@@ -95,7 +99,7 @@ class KNN():
                     self.predictions[index] = max_label     
         
      
-    def predict(self, X_test, Y_test, testing_size = 10, verbose = False):
+    def test(self, X_test, Y_test, testing_size = 10):
         '''
         Inference of the KNN. Assumes that each row of `X_train` represents a sample.
       
@@ -107,26 +111,25 @@ class KNN():
         
         :param K: The amount of K-nearest neighbors to consider
         :type K: int 
-        
-        :param verbose: The verbosity of the output, if you want accuracy metrics printed, set to verbose = True
-        :type verbose: bool
         '''     
 
         self.X_test = X_test
         self.Y_test = Y_test
         
         if self.modality.lower() == 'brute':
-            self._predict_brute(testing_size, self.K, verbose) 
+            self._predict_brute(testing_size, self.K) 
 
         '''elif self.modality.lower() == '':
             self._predict_kd_tree()'''
+        
+        self.test_acc = knn_accuracy(self.Y_tset, self.predictions) 
             
         print(f"\nFinished testing\n")
 
-        if verbose and Y_test is not None and Y_test.any():
-            print(f"Accuracy: {knn_accuracy(self.Y_test, self.predictions)}%")
+        if self.verbose_test and Y_test is not None and Y_test.any():
+            print(f"Accuracy: {self.test_acc}%")
         
-        return self.predictions
+        return self.test_acc, self.predictions
    
     def metrics(self):
         '''

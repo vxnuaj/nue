@@ -1,26 +1,27 @@
 import numpy as np
 from nue.metrics import svm_hinge_loss, svm_accuracy
+from nue.models import LogisticRegression
+from nue.calibration import _PlattScaling
 
 class SVM():
    
     '''
     Initialize the Support Vector Machine 
+    
+    :param seed: Set the random seed for initializing parameter, based on numpy.random.default_rng(). 
+    :type seed: int
+    :param verbose_train: Set the verbosity of the model during training
+    :type bool:
+    :param verbose_test: Set the verbosity of the model during testing
+    :type bool:
     ''' 
     
-    def __init__(self, seed:int = None):
-
+    def __init__(self, seed:int = None, verbose_test = False, verbose_train = False):
         self.seed = seed
-         
-        self.X_train = np.empty(0)
-        self.Y_train = np.empty(0)
-        self.alpha = .0001
-        self.epochs = 250
-
-        self.__num_features = None
-        self.__params = []
-        self.__gradients = []
-
-    def train(self, X_train:np.ndarray, Y_train:np.ndarray, modality = 'soft', C = .01, alpha:float = .0001, epochs:int = 250, verbose:bool = False, metric_freq:int = 1 ):
+        self.verbose_test = verbose_test 
+        self.verbose_train = verbose_train
+        
+    def train(self, X_train:np.ndarray, Y_train:np.ndarray, modality = 'soft', C = .01, alpha:float = .0001, epochs:int = 250, metric_freq:int = 1 ):
         '''
         Train the SVM
          
@@ -39,8 +40,6 @@ class SVM():
         :param epochs: The number of epochs for training
         :type epochs: int
 
-        :param verbose: If True, will print out training progress of the model
-        :type verbose: bool
         :param metric_freq: Will not apply if verbose is set to False. 
       
             Will print out epoch and loss at the epoch frequency set by metric_freq 
@@ -57,16 +56,93 @@ class SVM():
         self.C = C
         self.alpha = alpha
         self.epochs = epochs 
-        self.verbose_train = verbose
         self.metric_freq = metric_freq
         
         self.__num_features = X_train.shape[1]
         
         self.__params = self._init_params()
-        self.__params = self._gradient_descent()
+        self.train_loss, self.train_acc, self.__params = self._gradient_descent()
 
-        return self.__params
+        return self.train_loss, self.train_acc, self.__params
 
+    def test(self, X_test:np.ndarray, Y_test:np.ndarray, return_probs = False, **platt_kwargs): # TODO -- add ability to use holdout set for platt scaling.
+        '''
+        Test the SVM
+       
+        :param X_test: The validation features, shape (samples, feature).
+        :type X_test: numpy.ndarray
+        :param Y_test: The validation labels, shape (samples, 1) or (samples, ). If binary, labels must be -1 or 1.
+        :type Y_test: numpy.ndarray
+        :param return_probs: If True, return probabilities of the SVM via Platt's method. If False, only return loss and predictions 
+        :type return_probs: bool 
+        :param platt_kwargs: The keyword arguments for the _PlattScaling() class, of __init__, platt_train, and platt_test. See the _PlattScaling class for more details.
+        
+        :return self.test_loss: The SVM's testing loss
+        :rtype self.test_loss: float
+        :return self.test_acc: The SVM's testing accuracy
+        :rtype self.tests_acc: float
+        :return self.predictions: The predictions of the SVM
+        :rtype self.predictions: float or int (not sure lol)
+        :return raw_output: Only returns if return_probs is True. Returns the raw outputs of the SVM without applying the 
+        :rtype raw_output: numpy.ndarray
+        '''        
+
+        self.X_test = X_test
+        self.Y_test = Y_test
+        self.return_probs = return_probs
+       
+        print("Model testing!")
+        w, b = self.__params
+        self.raw_output = np.dot(w, X_test.T) + b
+        self.test_loss = svm_hinge_loss(self.predictions, self.Y_test.T, self.__params, modality = self.modality)
+        self.test_acc, _ = svm_accuracy(self.Y_test.T, self.raw_output)
+        self.predictions = np.sign(self.raw_output) 
+        print(f"Model tested!\n") 
+        
+        if self.return_probs:
+            self.platt_model = _PlattScaling(seed = platt_kwargs['seed'], verbose_train = platt_kwargs['verbose_train'], verbose_test = platt_kwargs['verboe_test'])    
+            self._train_platt_model(self.raw_output, platt_kwargs)
+            self._test_platt_model(platt_kwargs)
+            return self.test_loss, self.test_acc, self.predictions, self.probs.flatten()
+ 
+        if self.verbose_test:
+            print(f"Final test loss: {self.test_loss}")
+            print(f"Final test accuracy: {self.test_acc}%\n")
+            if self.return_probs:
+                print(f"Final test probabilities: {self.probs.flatten()}")
+        
+        return self.test_loss, self.test_acc, self.predictions  
+
+    def inference(self, X_inf:np.ndarray, Y_inf:np.ndarray, return_raw_score = False):
+        '''
+        Inference of the SVM
+        
+        :param X_inf: The validation features, shape (samples, feature)
+        :type X_test: numpy.ndarray
+        :param Y_test: The validation labels, shape (samples, 1) or (samples, ). If binary, labels must be -1 or 1.
+        :type Y_test: numpy.ndarray
+        :param verbose: If true, will print out loss and r2 score post-test.
+        :type verbose: bool 
+        
+        :return self.pred: The predictions of the SVM
+        :rtype self.pred: numpy.ndarray
+        :return self.output: The raw outputs of the SVM
+        :rtype self.output: numpy.ndarray
+        ''' 
+
+        self.X_inf = X_inf
+        self.Y_inf = Y_inf
+      
+        w, b = self.__params
+        self.output = np.dot(w, X_inf.T) + b
+        self.inf_loss = svm_hinge_loss(self.output, self.Y_inf.T, self.__params, modality = 'hard')
+        self.inf_acc = svm_accuracy(self.Y_inf.T, self.output)
+        self.pred = np.maximum(self.output, 0)        
+
+        if return_raw_score:
+            return self.pred, self.output
+        return self.pred
+    
     def _init_params(self):
         """
         Initialize the parameters (weights and bias) for the SVm, based on the chosen seed in the init method.
@@ -95,9 +171,9 @@ class SVM():
         '''
         w, b = self.__params
 
-        self._output = np.dot(w, self.X_train.T) + b
+        self.predictions = np.dot(w, self.X_train.T) + b
         
-        return self._output
+        return self.predictions
 
     def _backward(self):
         '''
@@ -145,7 +221,7 @@ class SVM():
         k = 6
         w, _ = self.__params 
 
-        self._functional_margin = (self.Y_train.T * self._output).flatten()
+        self._functional_margin = (self.Y_train.T * self.predictions).flatten()
         min_indices = np.argpartition(self._functional_margin, k)[:k]
         self.support_vectors = self.X_train[min_indices, :]
         weight_norm = np.linalg.norm(w, ord = 2, axis = 1)
@@ -166,90 +242,30 @@ class SVM():
         print(f"Model Training!")
         
         for epoch in range(self.epochs):
-            self._output = self._forward()
+            self.predictions = self._forward()
             
-            self.train_loss = svm_hinge_loss(self._output, self.Y_train.T, self.__params, self.modality, self.C)
-            self.train_acc = svm_accuracy(self.Y_train.T, self._output)
+            self.train_loss = svm_hinge_loss(self.predictions, self.Y_train.T, self.__params, self.modality, self.C)
+            self.train_acc, _ = svm_accuracy(self.Y_train.T, self.predictions)
 
             self.__gradients = self._backward()
             self.__params = self._update()
             
-            if self.verbose_train == True: 
+            if self.verbose_train: 
                 if epoch % self.metric_freq == 0:
                     print(f"Epoch: {epoch}")
                     print(f"Loss {self.train_loss}")
                     print(f"Accuracy: {self.train_acc}%\n")
                 
-        if self.verbose_train == True:
+        if self.verbose_train:
             print(f"Final Training Loss: {self.train_loss}")
             print(f"Final Training Accuracy: {self.train_acc}%\n")
 
+        self.weights, self.bias = [i for i in self.__params]
         self.support_vectors = self.support_vector()
 
-        return self.__params
+        print(f"Finished Training!")
 
-
-    def test(self, X_test:np.ndarray, Y_test:np.ndarray, verbose:bool = False ):
-        '''
-        Test the SVM
-       
-        :param X_test: The validation features, shape (samples, feature).
-        :type X_test: numpy.ndarray
-        :param Y_test: The validation labels, shape (samples, 1) or (samples, ). If binary, labels must be -1 or 1.
-        :type Y_test: numpy.ndarray
-        :param verbose: If true, will print out loss and r2 score post-test.
-        :type verbose: bool  
-        '''        
-
-        self.X_test = X_test
-        self.Y_test = Y_test
-
-        if not isinstance(verbose, bool):
-            raise ValueError("verbose must be type bool!")
-
-        print("Model testing!")
-        
-        w, b = self.__params
-        self._output = np.dot(w, X_test.T) + b
-       
-        self.test_loss = svm_hinge_loss(self._output, self.Y_test.T, self.__params, modality = 'hard')
-        self.test_acc = svm_accuracy(self.Y_test.T, self._output)
-        
-        print(f"Model tested!\n") 
-        
-        if verbose:
-            print(f"Final test loss: {self.test_loss}")
-            print(f"Final test accuracy: {self.test_acc}%\n")
-        
-        return self.test_loss, self.test_acc        
-
-    def inference(self, X_inf:np.ndarray, Y_inf:np.ndarray, verbose:bool = False):
-        '''
-        Inference of the SVM
-        
-        :param X_inf: The validation features, shape (samples, feature)
-        :type X_test: numpy.ndarray
-        :param Y_test: The validation labels, shape (samples, 1) or (samples, ). If binary, labels must be -1 or 1.
-        :type Y_test: numpy.ndarray
-        :param verbose: If true, will print out loss and r2 score post-test.
-        :type verbose: bool  
-        ''' 
-        
-        self.X_inf = X_inf
-        self.Y_inf = Y_inf
-        
-        if not isinstance(verbose, bool):
-            raise ValueError("verbose must be type bool!")
-        
-        w, b = self.__params
-        self._output = np.dot(w, X_inf.T) + b
-        
-        self.inf_loss = svm_hinge_loss(self._output, self.Y_inf.T, self.__params, modality = 'hard')
-        self.inf_acc = svm_accuracy(self.Y_inf.T, self._output)
-
-        self.pred = np.maximum(self._output, 0)        
-
-        return self.pred
+        return self.train_loss, self.train_acc, self.__params
 
     def metrics(self, mode = 'train'):
         
@@ -279,6 +295,24 @@ class SVM():
                 raise ValueError("You haven't trained the model yet!")
             print(f"Train loss: {self.train_loss} | Train accuracy: {self.train_acc}%")  
 
+    def _train_platt_model(self, platt_kwargs):
+        try:
+            self.platt_X_train = platt_kwargs['X_train'] 
+            self.platt_Y_train = platt_kwargs['Y_train'] 
+        except:
+            self.platt_X_train = self.X_train
+            self.platt_Y_train = self.Y_train 
+        self.probs, _, self.platt_train_loss, self.platt_train_acc = self.platt_model.platt_train(X_train = self.platt_X_train, Y_train = self.platt_Y_train, alpha = platt_kwargs['alpha'], epochs = platt_kwargs['epochs'], metric_freq = platt_kwargs['metric_freq']) 
+            
+    def _test_platt_model(self, platt_kwargs):
+        try:
+            self.platt_X_test = platt_kwargs['X_test']
+            self.platt_Y_test = platt_kwargs['Y_test'] 
+        except:
+            self.platt_X_test = self.X_test
+            self.platt_Y_test = self.Y_test 
+        self.probs, _, self.platt_test_loss, self.platt_test_acc = self.platt_model.platt_inf(X_test = self.platt_X_test, Y_test = self.platt_Y_test)
+        
     @property
     def X_train(self):
         return self._X_train 
@@ -346,6 +380,9 @@ class SVM():
     def Y_inf(self, Y_inf):
         if not isinstance(Y_inf, np.ndarray):
             raise ValueError("Y_train must be type numpy.ndarray!") 
+        
+        if np.any(Y_inf == 0):
+            Y_inf = np.where(Y_inf == 0, -1, 1)
         self._Y_inf = Y_inf
    
     @property
@@ -354,8 +391,8 @@ class SVM():
    
     @alpha.setter
     def alpha(self, alpha):
-        if not isinstance(alpha, float):
-            raise ValueError("alpha must be type float!")
+        if not isinstance(alpha, (float, int)):
+            raise ValueError("alpha must be type float or int!")
         self._alpha = alpha     
     
     @property
@@ -398,4 +435,21 @@ class SVM():
             self._C = None
         else:
             self._C = C
+   
+    @property
+    def platt_train_verbose(self):
+        return self._platt_train_verbose
     
+    @platt_train_verbose.setter
+    def platt_train_verbose(self, platt_train_verbose):
+        assert isinstance(platt_train_verbose, bool), 'platt_train_verbose must be type bool.' 
+        self._platt_train_verbose = platt_train_verbose
+        
+    @property
+    def platt_test_verbose(self):
+        return self._platt_test_verbose
+    
+    @platt_test_verbose.setter
+    def platt_test_verbose(self, platt_test_verbose):
+        assert isinstance(platt_test_verbose, bool), 'platt_test_verbose must be type bool.' 
+        self._platt_test_verbose = platt_test_verbose

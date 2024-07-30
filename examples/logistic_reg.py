@@ -1,5 +1,8 @@
+import numpy as np
 from nue.models import LogisticRegression
 from nue.preprocessing import ZNorm, x_y_split, train_test_split, csv_to_numpy 
+np.set_printoptions(suppress=True)
+
 
 ''' Pre-processing data '''
 
@@ -13,22 +16,22 @@ znorm_1 = ZNorm()
 X_train = znorm_1.fit_normalize(X_train)
 X_test = znorm_1.normalize(X_test)
 
-
 ''' Setting hyperparameters '''
 
 alpha = .01
-epochs = 1000
+epochs = 10000
+verbose_train = False
+verbose_test = True
+return_probs = True
 
 ''' Instantiating model '''
 
-model = LogisticRegression(seed = 1)
-
+model = LogisticRegression(seed = 1, verbose_test = verbose_test, verbose_train = verbose_train)
 
 ''' Training and Testing the model '''
 
-model.train(X_train, Y_train, alpha, epochs, verbose = False)
-model.test(X_test, Y_test, verbose = True)
-
+model.train(X_train, Y_train, alpha, epochs)
+loss, acc, pred, probs = model.test(X_test, Y_test, return_probs = return_probs)
 
 ''' Checking final metrics '''
 

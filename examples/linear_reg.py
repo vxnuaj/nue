@@ -22,17 +22,18 @@ Y_test = z_norm2.fit_normalize(Y_test)
 
 alpha = .01
 epochs = 10000
-verbose_1 = False
-verbose_2 = True
+verbose_train = False
+verbose_test = True
+modality = 'sgd'
 
 ''' Instantiating the model '''
 
-model = LinearRegression(modality = 'ols',  seed = 1)
+model = LinearRegression(seed = 1, verbose_test= verbose_test, verbose_train = verbose_train)
 
 ''' Training and Testing the model '''
 
-model.train(X_train, Y_train, alpha = alpha, epochs = epochs, verbose = verbose_1)
-model.test(X_test, Y_test, verbose = verbose_2)
+model.train(X_train, Y_train, modality = modality, alpha = alpha, epochs = epochs)
+model.test(X_test, Y_test) 
 
 
 ''' Checking Final Metrics '''

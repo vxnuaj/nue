@@ -31,5 +31,5 @@ def svm_hinge_loss(z, y, params, modality = 'soft', C = None):
         penalty = C * np.linalg.norm(w, ord = 2)
         train_loss = np.sum(np.maximum(0, 1 - y * z )) / y.size
         train_loss += penalty
-    return train_loss.flatten()
+    return float(train_loss.flatten())
         

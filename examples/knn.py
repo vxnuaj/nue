@@ -18,17 +18,16 @@ Y_train, Y_test = Y_train.flatten(), Y_test.flatten()
 ''' Setting hyperparameters '''
 
 testing_size = 20
-verbose = True
+verbose_test = True
 K = 10
 modality = 'brute'
 distance_metric = 2
 
 ''' Instantiating model '''
 
-model = KNN()
-
+model = KNN(verbose_test=verbose_test)
 
 ''' Training and testing the KNN '''
 
 model.train(X_train, Y_train, K = K, modality = modality, distance_metric=distance_metric)
-model.predict(X_test, Y_test, testing_size = testing_size, verbose=verbose)
+model.test(X_test, Y_test, testing_size = testing_size)

@@ -17,7 +17,6 @@ def knn_accuracy(y, pred):
     acc = np.sum(y == pred) / y.size * 100
     return acc
 
-
 def nn_accuracy(y, a):
     pred = np.argmax(a, axis = 0)
     acc = np.sum(pred == y) / y.size * 100
@@ -26,7 +25,7 @@ def nn_accuracy(y, a):
 def svm_accuracy(y, z):
     pred = np.sign(z) 
     acc = np.sum(y == pred) / y.size * 100
-    return acc
+    return acc, pred
 
 def entropy(Y):
     eps = 1e-10
