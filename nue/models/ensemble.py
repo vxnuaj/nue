@@ -13,10 +13,17 @@ TODO
     - [ ] Build the testing function
         - [ ] Ensure all models have the ability to return probabilities.
             - [X] SVMs
+                - [ ] Ensure that probabilities are returned with respect to it being 1
             - [X] Log Reg
-            - [ ] KNN - create a class for PlattsMethod and use it here as + replace the svm code.
-                I left off here, trying to create a class and implement it in the SVM. Need to test if it works now. Then move onto KNN.
+            - [X] KNN
+                - [X] Ensure that probabilities are returned with respect to it being 1
             - [X] Decision Tree
+                - [X] Ensure thast probabilitie asre returned with respect to it being 1
+           
+----- notes -------
+
+> Just need to continue now            
+
 '''
 
 class EnsembleClassifier:

@@ -79,7 +79,18 @@ class DecisionTree():
             pred_and_prob = [self._traverse(x) for x in X_test]
             pred, probs = zip(*pred_and_prob)
             pred = np.array(pred)
-            probs = np.array(probs, dtype=object) 
+            self.probs = np.array(probs, dtype=object) 
+          
+            idxs = [i for i, p in enumerate(probs) if len(p) == 1]
+            idxs_labels = pred[idxs]
+
+            for i, idx in enumerate(idxs):
+                if idxs_labels[i] == 0:
+                    self.probs[idx] = np.insert(probs[idx], 0, 0)
+                else:
+                    self.probs[idx] = np.insert(probs[idx], 1, 0) 
+       
+            self.probs = np.array([p[1:] for p in self.probs]).flatten()
             
         else:
             pred = np.array([self._traverse(x) for x in X_test])
@@ -90,9 +101,9 @@ class DecisionTree():
             self.test_metrics()
         
         if self.return_probs:
-            return pred, probs, self.test_acc, self.uncertainty
+            return pred, probs, self.test_acc, self.test_uncertainty
         else:
-            return pred, self.test_acc, self.uncertainty
+            return pred, self.test_acc, self.test_uncertainty
     
     def _grow_tree(self, X, Y, depth = 0):
       
@@ -303,28 +314,30 @@ class DecisionTree():
       
         if self.return_probs:
             _, freqs = np.unique(node.Y, return_counts=True) 
-            probs = freqs / len(node.Y) 
+            probs = np.array(freqs) / len(node.Y) 
             
-             
-            return node.value, probs 
-       
-        
         if self.modality == 'entropy':
             self.test_uncertainty = entropy(node.Y)
         elif self.modality == 'gini':
             self.test_uncertainty = gini(node.Y) 
+       
+        if self.return_probs:
+            return node.value, probs  
         
         return node.value
       
     def train_metrics(self):
         print(f"\nTotal Leaf Nodes: {self.n_leaf} ☘︎")
         print(f"Training Accuracy: {self.train_acc}%") 
-        print(f"Model Uncertianty: {self.uncertainty}")
+        print(f"Average Model Uncertainty: {self.train_uncertainty}")
        
     def test_metrics(self):
         print(f"\nTotal Leaf Nodes: {self.n_leaf} ☘︎") 
         print(f"Testing Accuracy: {self.test_acc}%")
-        print(f"Model Uncertainty: {self.uncertainty}")
+        print(f"Average Model Uncertainty: {self.test_uncertainty}")
+      
+        if self.probs is not None:
+            print(f"Probabilities: {self.probs}") 
        
     @property
     def X_train(self):

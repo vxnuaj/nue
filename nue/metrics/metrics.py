@@ -7,9 +7,7 @@ def r2_score(y, pred):
     return r2 
 
 def logistic_accuracy(y, a):
-    
     pred = np.round(a, decimals = 0) 
-    
     acc = np.sum(pred == y) / y.size * 100
     return acc
 

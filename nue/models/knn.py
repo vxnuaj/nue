@@ -1,5 +1,6 @@
 import numpy as np
 from nue.metrics import knn_accuracy
+from nue.calibration import _PlattScaling
 
 class KNN():
 
@@ -49,7 +50,68 @@ class KNN():
         
         print(f"Finished Training!") 
       
-    def _predict_brute(self, testing_size, K):
+    def test(self, X_test, Y_test, testing_size = 10, return_probs = False, platt_kwargs = {}):
+        '''
+        Inference of the KNN. Assumes that each row of `X_train` represents a sample.
+      
+        :param X_test: Input data of shape (samples, features)
+        :type X_test: numpy.ndarray 
+        :param Y_test: Input labels of the data
+        :type Y_test: numpy.ndarray
+        :param testing_size: The sample size for the test set
+        :type testing_size: int 
+        :param return_probs: Experimenatal. If True, return probabilities of the SVM via Platt's method. If False, only return loss and predictions. 
+        :type return_probs: bool  
+        :param platt_kwargs: The key value arguments for the _PlattScaling() class, of __init__, platt_train, and platt_test, in the form of a dictionary. If not supplied, _PlattScaling() class is initialized with default values. Supplying the platt_kwargs dict is extremely recommended. See the _PlattScaling class for more details.
+        :type platt_kwargs: dict 
+        '''     
+
+        self.X_test = X_test
+        self.Y_test = Y_test
+        self.return_probs = return_probs
+        self.platt_kwargs = platt_kwargs
+        
+        if self.modality.lower() == 'brute':
+            self._predict_brute(testing_size) 
+
+        '''elif self.modality.lower() == '':
+            self._predict_kd_tree()'''
+            
+        print(f"KNN Testing!")
+        
+        self.test_acc = knn_accuracy(self.Y_test, self.predictions) 
+           
+        if self.return_probs:
+            try:
+                seed = self.platt_kwargs.get('seed', 1)
+                verbose_train = self.platt_kwargs.get('verbose_train', True)
+                verbose_test = self.platt_kwargs.get('verbos_test', True)
+            except:
+                seed = 1
+                verbose_train = False 
+                verbose_test = False
+                
+            self.platt_model = _PlattScaling(seed = seed, verbose_train = verbose_train, verbose_test = verbose_test) 
+            self._train_platt_model() 
+            
+            print(f"KNN Finished Testing")
+
+            if self.verbose_test:
+                print(f"KNN Test Accurascy: {self.test_acc}")
+                print(f"KNN Test Probabilities: {self.probs.flatten()}")
+
+            return self.test_acc, self.probs.flatten()
+
+        print(f"KNN Finished Testing")
+
+        if self.verbose_test:
+            print(f"Accuracy: {self.test_acc}%")
+       
+       
+        
+        return self.test_acc, self.predictions 
+      
+    def _predict_brute(self, testing_size):
        
         '''
         Predict classes using the KNN model.
@@ -67,7 +129,7 @@ class KNN():
         self.X_test = self.X_test[:testing_size, :]
         self.Y_test = self.Y_test[:testing_size]
         
-        if K > self.X_train.shape[0]:
+        if self.K > self.X_train.shape[0]:
             raise ValueError("K must not be greater than the number of samples in the training set!")
    
         self.predictions = np.empty(self.X_test.shape[0], dtype = self.Y_test.dtype)
@@ -77,60 +139,42 @@ class KNN():
             if self.verbose_test == True:
                 print(f"Sample: {index}")
             
-            distances = np.linalg.norm(self.X_train - test_row, ord = self.distance_metric, axis = 1) # Takes the difference in L2 size of X_train and the testing data
-            nearest_k_index = np.argsort(distances)[:K] # Yields the indices of the lowest distances of X_train up to the kth value 
-            nearest_k_labels = self.Y_train[nearest_k_index] # Indexes Y_train, gets the labels of the corresponding values the lowest distance based on their indices as previously assigned
+            self.distances = np.linalg.norm(self.X_train - test_row, ord = self.distance_metric, axis = 1) # Takes the difference in L2 size of X_train and the testing data
+            self.nearest_k_distances = np.sort(self.distances)[:self.K].reshape(-1, 1) # Returns the nearest K distances. 
+            self.nearest_k_index = np.argsort(self.distances)[:self.K] # Yields the indices of the lowest distances of X_train up to the kth value 
+            self.nearest_k_labels = self.Y_train[self.nearest_k_index] # Indexes Y_train, gets the labels of the corresponding values the lowest distance based on their indices as previously assigned
            
-            if len(np.unique(nearest_k_labels)) == 1:  # All labels are the same
-                self.predictions[index] = nearest_k_labels[0]
+            if len(np.unique(self.nearest_k_labels)) == 1:  # All labels are the same
+                self.predictions[index] = self.nearest_k_labels[0]
             else:
                 # Handle tie-breaking by distance
-                max_label = np.argmax(np.bincount(nearest_k_labels.astype(int))) # Gets the most occuring label in nearest_k_labels
-                max_counts = np.bincount(nearest_k_labels.astype(int))[max_label] # Gets how many times the maximum label appeared.
+                labels, counts = np.unique(self.nearest_k_labels, return_counts=True)  # Get unique labels and their counts
+                max_count_indices = np.where(counts == np.max(counts))[0]  # Indices of labels with the highest count
 
-                if np.sum(np.bincount(nearest_k_labels.astype(int)) == max_counts) > 1: # Checks if there are other labels that appear the similar amount to the previous label of max_counts.
-                    # Compute distances for the tied labels
-                    tied_indices = np.where(np.bincount(nearest_k_labels.astype(int)) == max_counts)[0] # Returns the index of the label that is tied with the other maximum label, baesd on it's frequency.
-                    tied_distances = distances[tied_indices] # Returns distance values of the tied datapoints, based on their index.
+                if len(max_count_indices) > 1:  # Tie in the counts
+                    tied_labels = labels[max_count_indices]  # Labels that are tied
+                    tied_indices = np.isin(self.nearest_k_labels, tied_labels)  # Indices in nearest_k_labels that are tied
+                    tied_distances =self.distances[self.nearest_k_index][tied_indices]  # Distances of the tied labels
 
-                    min_distance_index = np.argmin(tied_distances) # Returns the index of the tied datapoint that is lowest distance from the input.
-                    self.predictions[index] = nearest_k_labels[tied_indices[min_distance_index]] # Selects the label of the value with the lowest distance and adds it to self.predictions
+                    min_distance_index = np.argmin(tied_distances)  # Index of the tied label with the smallest distance
+                    self.predictions[index] = self.nearest_k_labels[tied_indices][min_distance_index]  # Select the label with the smallest distance
                 else:
-                    self.predictions[index] = max_label     
+                    self.predictions[index] = labels[max_count_indices[0]]  # Select the most frequent label
+  
+    def _train_platt_model(self):
         
-     
-    def test(self, X_test, Y_test, testing_size = 10):
-        '''
-        Inference of the KNN. Assumes that each row of `X_train` represents a sample.
-      
-        :param X_test: Input data of shape (samples, features)
-        :type X_test: numpy.ndarray 
+        self.platt_Y_train = self.platt_kwargs.get('Y_train', self.nearest_k_labels)[:self.K]
+        self.platt_alpha = self.platt_kwargs.get('alpha', .01) 
+        self.platt_epochs = self.platt_kwargs.get('epochs', 1000) 
+        self.platt_metric_freq = self.platt_kwargs.get('metric_freq', None) 
         
-        :param Y_test: Input labels of the data
-        :type Y_test: numpy.ndarray
-        
-        :param K: The amount of K-nearest neighbors to consider
-        :type K: int 
-        '''     
-
-        self.X_test = X_test
-        self.Y_test = Y_test
-        
-        if self.modality.lower() == 'brute':
-            self._predict_brute(testing_size, self.K) 
-
-        '''elif self.modality.lower() == '':
-            self._predict_kd_tree()'''
-        
-        self.test_acc = knn_accuracy(self.Y_tset, self.predictions) 
+        self.probs, _, self.platt_train_loss, self.platt_train_acc = self.platt_model.platt_train(model_output = self.nearest_k_distances.T, Y_train = self.platt_Y_train, alpha = self.platt_alpha, epochs = self.platt_epochs, metric_freq = self.platt_metric_freq) 
             
-        print(f"\nFinished testing\n")
-
-        if self.verbose_test and Y_test is not None and Y_test.any():
-            print(f"Accuracy: {self.test_acc}%")
+    def _test_platt_model(self):
+        self.platt_X_test = self.platt_kwargs.get('X_test', self.X_test)
+        self.platt_Y_test = self.platt_kwargs.get('Y_test', self.Y_test)
+        self.probs, _, self.platt_test_loss, self.platt_test_acc = self.platt_model.platt_inf(model_output = self.nearest_k_distances.T, Y_inf = self.platt_Y_test)
         
-        return self.test_acc, self.predictions
-   
     def metrics(self):
         '''
         Prints the metrics of the KNN. Can only be called if the function, self.predict has been succesfully run. Alternative is self.predict(args, ... , verbose = True) 

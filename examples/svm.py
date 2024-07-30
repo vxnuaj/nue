@@ -3,8 +3,8 @@ from nue.preprocessing import x_y_split, csv_to_numpy
 
 ''' Pre-processing data '''
 
-train_data = csv_to_numpy('data/SVM.csv')
-test_data = csv_to_numpy('data/testSVM.csv')
+train_data = csv_to_numpy('data/ensembleTrain.csv')
+test_data = csv_to_numpy('data/ensembleTest.csv')
 
 X_train, Y_train = x_y_split(train_data, y_col = 'last')
 X_test, Y_test = x_y_split(train_data, y_col = 'last')
@@ -13,7 +13,6 @@ X_test, Y_test = x_y_split(train_data, y_col = 'last')
 
 alpha = .01
 epochs = 1000
-verbose = True
 seed = 0
 modality = 'soft'
 verbose_train = False
@@ -29,13 +28,11 @@ model = SVM(seed = seed, verbose_train = verbose_train, verbose_test = verbose_t
 ''' Training and Testing the SVM, and returning raw Probabilities via Platt's Method '''
 
 model.train(X_train, Y_train, modality = modality, alpha = alpha, epochs = epochs)
+loss, acc, preds, probs = model.test(X_test, Y_test, return_probs) 
 
 
-model.train_platt_model(model.predictions, platt_train_verbose = platt_train_verbose, platt_test_verbose = platt_test_verbose)
-
-loss, acc, preds, probs = model.test(X_test, Y_test, return_probs = return_probs) 
-
-''' Support Vectors '''
+''' 
+Support Vectors
 
 support_vector, geometric_margin = model.support_vector()
 
@@ -43,3 +40,4 @@ print("\nSupport Vectors:\n")
 print("\n".join([f"{i}" for i in support_vector]))
 print("\nGeometric Margins:\n")
 print("\n".join([f"{i}" for i in geometric_margin]))
+'''

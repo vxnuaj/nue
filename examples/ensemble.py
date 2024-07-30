@@ -15,7 +15,7 @@ X_test, Y_test = x_y_split(test, y_col = 'last')
 verbose_train = False
 verbose_test = True
 seed = 1
-
+  
 lin_reg = LinearRegression(seed = 1, verbose_train = verbose_train, verbose_test=verbose_test)
 log_reg = LogisticRegression(seed = 1, verbose_train = verbose_train, verbose_test=verbose_test)
 svm = SVM(seed = 1, verbose_train = verbose_train, verbose_test=verbose_test)
@@ -37,7 +37,6 @@ linreg_train = {
 logreg_train = {
   
     'logreg!': log_reg,
-    'alpha': .0001,
     'epochs': 5000,
     'metric_freq': 1000 
     

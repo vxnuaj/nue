@@ -18,7 +18,7 @@ class LogisticRegression:
         self.verbose_train = verbose_train
         self.verbose_test = verbose_test 
     
-    def train(self, X_train:np.ndarray, Y_train:np.ndarray, alpha:float = .0001, epochs:int = 250, metric_freq:int = None ):
+    def train(self, X_train:np.ndarray, Y_train:np.ndarray, alpha:float = .0001, epochs:int = 1000, metric_freq:int = None ):
         """
         Train the logistic regression model.
 
@@ -49,7 +49,7 @@ class LogisticRegression:
         self.__num_features = X_train.shape[1]     
         self.__params = self._init_params()
         self.train_loss, self.train_acc, self.__params = self._gradient_descent()
-        
+      
         return self.train_loss, self.train_acc, self.__params 
 
     def test(self, X_test:np.ndarray, Y_test:np.ndarray, return_probs = False):
@@ -66,21 +66,22 @@ class LogisticRegression:
         self.Y_test = Y_test
         self.return_probs = return_probs
 
-        print("Model testing!")
+        print("Logistic Regression Testing!")
        
         w, b = self.__params
-        z = np.dot(w, X_test.T) + b
+        
+        z = np.dot(w, self.X_test.T) + b
         a = self.sigmoid(z) 
         self.pred = np.round(a, decimals = 0)
        
         self.test_loss = log_loss(self.Y_test.T, a)
         self.test_acc = logistic_accuracy(self.Y_test.T, a)
 
-        print("Model tested!\n")         
+        print("Logistic Regression Tested!")         
 
         if self.verbose_test:
-            print(f"Final test loss: {self.test_loss}")
-            print(f"Final test accuracy: {self.test_acc}%\n") 
+            print(f"Logistic Regression Test Loss: {self.test_loss}")
+            print(f"Logistic Regression Test Accuracy: {self.test_acc}%\n") 
 
         if self.return_probs:
             self.pred, self.probs = self.inference(self.X_test, self.Y_test, self.verbose_test)
@@ -170,7 +171,7 @@ class LogisticRegression:
         :return: List containing the final weights (w) and bias (b).
         :rtype: list
         """
-        print(f"Model Training!") 
+        print(f"Logistic Regression Training!") 
         
         for epoch in range(self.epochs):
             self._output = self._forward()
@@ -190,11 +191,11 @@ class LogisticRegression:
         
         self.weights, self.bias = [i for i in self.__params]            
                     
-        print(f"Finished Training!") 
+        print(f"Logistic Regression Finished Training!") 
         
         if self.verbose_train == True:
-            print(f"Final Training Loss: {self.train_loss}")
-            print(f"Final Training Accuracy: {self.train_acc}%\n")
+            print(f"Logistic Regression Training Loss: {self.train_loss}")
+            print(f"Logistic Regression Training Accuracy: {self.train_acc}%")
         
         return self.train_loss, self.train_acc, self.__params
     
