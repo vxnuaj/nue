@@ -11,14 +11,14 @@ X_test, Y_test = x_y_split(train_data, y_col = 'last')
 
 ''' Setting parameters '''
 
-alpha = .01
+alpha = .0
 epochs = 1000
 seed = 0
 modality = 'soft'
 verbose_train = False
 verbose_test = True
-platt_train_verbose = True
-platt_test_verbose = True
+platt_train_verbose = False
+platt_test_verbose = False
 return_probs = True
 
 ''' Instantiating SVM '''

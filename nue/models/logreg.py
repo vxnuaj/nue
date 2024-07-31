@@ -68,6 +68,9 @@ class LogisticRegression:
 
         print("Logistic Regression Testing!")
        
+        self.pred, self.probs = self.inference(self.X_test, self.Y_test, self.verbose_test) 
+    
+    
         w, b = self.__params
         
         z = np.dot(w, self.X_test.T) + b
@@ -81,16 +84,13 @@ class LogisticRegression:
 
         if self.verbose_test:
             print(f"Logistic Regression Test Loss: {self.test_loss}")
-            print(f"Logistic Regression Test Accuracy: {self.test_acc}%\n") 
-
-        if self.return_probs:
-            self.pred, self.probs = self.inference(self.X_test, self.Y_test, self.verbose_test)
-            return self.test_loss, self.test_acc, self.pred, self.probs.flatten()
-        else:
-            self.pred = self.inference(self.X_test, self.Y_test)
-            return self.test_loss, self.test_acc, self.pred
+            print(f"Logistic Regression Test Accuracy: {self.test_acc}%") 
+            if self.return_probs:
+                print(f"Logistic Regression Probabilities: {self.probs}")
+                self.test_loss, self.test_acc, self.pred, self.probs.flatten()
+        return self.test_loss, self.test_acc, self.pred
    
-
+    
     def _init_params(self):
         """
         Initialize the parameters (weights and bias) for the logistic regression model, based on the chosen seed in the init method.

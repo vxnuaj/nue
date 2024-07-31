@@ -136,8 +136,9 @@ class KNN():
 
         for index, test_row in enumerate(self.X_test): 
         
+            '''
             if self.verbose_test == True:
-                print(f"Sample: {index}")
+                print(f"Sample: {index}")'''
             
             self.distances = np.linalg.norm(self.X_train - test_row, ord = self.distance_metric, axis = 1) # Takes the difference in L2 size of X_train and the testing data
             self.nearest_k_distances = np.sort(self.distances)[:self.K].reshape(-1, 1) # Returns the nearest K distances. 

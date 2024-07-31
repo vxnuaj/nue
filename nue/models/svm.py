@@ -103,8 +103,8 @@ class SVM():
         if self.return_probs:
             try: 
                 seed = self.platt_kwargs.get('seed', 1) 
-                verbose_train = self.platt_kwargs.get('verbose_train', True) 
-                verbose_test = self.platt_kwargs.get('verbose_test', True) 
+                verbose_train = self.platt_kwargs.get('verbose_train', False) 
+                verbose_test = self.platt_kwargs.get('verbose_test', False) 
             except:
                 seed = 1
                 verbose_train = False
