@@ -86,8 +86,10 @@ class LogisticRegression:
             print(f"Logistic Regression Test Loss: {self.test_loss}")
             print(f"Logistic Regression Test Accuracy: {self.test_acc}%") 
             if self.return_probs:
-                print(f"Logistic Regression Probabilities: {self.probs}")
-                self.test_loss, self.test_acc, self.pred, self.probs.flatten()
+                print(f"Logistic Regression Probabilities: \n\n{self.probs}\n")
+         
+        if self.return_probs: 
+            return self.test_loss, self.test_acc, self.pred, self.probs.flatten()
         return self.test_loss, self.test_acc, self.pred
    
     

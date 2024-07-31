@@ -17,8 +17,8 @@ seed = 0
 modality = 'soft'
 verbose_train = False
 verbose_test = True
-platt_train_verbose = False
-platt_test_verbose = False
+platt_train_verbose = True
+platt_test_verbose = True
 return_probs = True
 
 ''' Instantiating SVM '''
@@ -28,7 +28,7 @@ model = SVM(seed = seed, verbose_train = verbose_train, verbose_test = verbose_t
 ''' Training and Testing the SVM, and returning raw Probabilities via Platt's Method '''
 
 model.train(X_train, Y_train, modality = modality, alpha = alpha, epochs = epochs)
-loss, acc, preds, probs = model.test(X_test, Y_test, return_probs) 
+loss, acc, preds, probs = model.test(X_test, Y_test, return_probs)
 
 
 ''' 

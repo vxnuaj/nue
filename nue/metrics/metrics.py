@@ -43,3 +43,7 @@ def gini(Y):
 def dt_accuracy(y, pred):
     acc = np.sum(y == pred) / y.size * 100
     return acc
+
+def accuracy(y, pred):
+    acc = np.sum(y == pred) / y.size * 100
+    return acc

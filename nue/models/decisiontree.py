@@ -79,16 +79,21 @@ class DecisionTree():
             pred_and_prob = [self._traverse(x) for x in X_test]
             pred, probs = zip(*pred_and_prob)
             pred = np.array(pred)
-            self.probs = np.array(probs, dtype=object) 
+            
+            self.probs = np.array(probs, dtype=object).flatten()
           
-            idxs = [i for i, p in enumerate(probs) if len(p) == 1]
+            idxs = np.array([i for i, p in enumerate(probs) if len(p) == 1])
             idxs_labels = pred[idxs]
+            
+            #print(f'IDXS:\n\n{idxs}')
+            #print(f'IDXSLABELS:\n\n{idxs_labels}')
+            #print(f"Probs:\n\n{self.probs}")
 
             for i, idx in enumerate(idxs):
                 if idxs_labels[i] == 0:
-                    self.probs[idx] = np.insert(probs[idx], 0, 0)
-                else:
-                    self.probs[idx] = np.insert(probs[idx], 1, 0) 
+                    self.probs[idx] = np.insert(self.probs[idx], 1, 0)
+                elif idxs_labels[i] == 1:
+                    self.probs[idx] = np.insert(self.probs[idx], 0, 0) 
        
             self.probs = np.array([p[1:] for p in self.probs]).flatten()
             
@@ -101,9 +106,9 @@ class DecisionTree():
             self.test_metrics()
         
         if self.return_probs:
-            return pred, probs, self.test_acc, self.test_uncertainty
+            return self.test_uncertainty, self.test_acc, pred, probs
         else:
-            return pred, self.test_acc, self.test_uncertainty
+            return self.test_uncertainty, self.test_acc, pred
     
     def _grow_tree(self, X, Y, depth = 0):
       
@@ -336,8 +341,8 @@ class DecisionTree():
         print(f"Testing Accuracy: {self.test_acc}%")
         print(f"Average Model Uncertainty: {self.test_uncertainty}")
       
-        if self.probs is not None:
-            print(f"Probabilities: {self.probs}") 
+        if hasattr(self, 'probs'):
+            print(f"Decision Tree Probabilities:\n\n{self.probs}") 
        
     @property
     def X_train(self):

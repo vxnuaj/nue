@@ -70,22 +70,23 @@ class KNN():
         self.Y_test = Y_test
         self.return_probs = return_probs
         self.platt_kwargs = platt_kwargs
+        self.testing_size = testing_size 
         
         if self.modality.lower() == 'brute':
-            self._predict_brute(testing_size) 
+            self._predict_brute() 
 
         '''elif self.modality.lower() == '':
             self._predict_kd_tree()'''
             
         print(f"KNN Testing!")
-        
-        self.test_acc = knn_accuracy(self.Y_test, self.predictions) 
+       
+        self.test_acc = knn_accuracy(self.Y_test.flatten(), self.predictions) 
            
         if self.return_probs:
             try:
                 seed = self.platt_kwargs.get('seed', 1)
                 verbose_train = self.platt_kwargs.get('verbose_train', True)
-                verbose_test = self.platt_kwargs.get('verbos_test', True)
+                verbose_test = self.platt_kwargs.get('verbose_test', True)
             except:
                 seed = 1
                 verbose_train = False 
@@ -100,18 +101,16 @@ class KNN():
                 print(f"KNN Test Accurascy: {self.test_acc}")
                 print(f"KNN Test Probabilities: {self.probs.flatten()}")
 
-            return self.test_acc, self.probs.flatten()
+            return self.test_acc, self.predictions, self.probs.flatten()
 
         print(f"KNN Finished Testing")
 
         if self.verbose_test:
-            print(f"Accuracy: {self.test_acc}%")
+            print(f"KNN Accuracy: {self.test_acc}%")
        
-       
-        
         return self.test_acc, self.predictions 
       
-    def _predict_brute(self, testing_size):
+    def _predict_brute(self):
        
         '''
         Predict classes using the KNN model.
@@ -123,16 +122,21 @@ class KNN():
         
         '''
         
-        if testing_size == None:
-            testing_size = self.X_test.shape[0]
+        if isinstance(self.testing_size, str) and self.testing_size.lower() == 'all':
+            self.testing_size = self.X_test.shape[0]
+        elif self.testing_size > self.X_test.shape[0]:
+            self.testing_size = self.X_test.shape[0]
             
-        self.X_test = self.X_test[:testing_size, :]
-        self.Y_test = self.Y_test[:testing_size]
+        self.X_test = self.X_test[:self.testing_size, :]
+        self.Y_test = self.Y_test[:self.testing_size]
         
         if self.K > self.X_train.shape[0]:
             raise ValueError("K must not be greater than the number of samples in the training set!")
    
         self.predictions = np.empty(self.X_test.shape[0], dtype = self.Y_test.dtype)
+        self.raw_probs = []
+
+        class_label_1 = 1
 
         for index, test_row in enumerate(self.X_test): 
         
@@ -144,6 +148,17 @@ class KNN():
             self.nearest_k_distances = np.sort(self.distances)[:self.K].reshape(-1, 1) # Returns the nearest K distances. 
             self.nearest_k_index = np.argsort(self.distances)[:self.K] # Yields the indices of the lowest distances of X_train up to the kth value 
             self.nearest_k_labels = self.Y_train[self.nearest_k_index] # Indexes Y_train, gets the labels of the corresponding values the lowest distance based on their indices as previously assigned
+        
+            unique_labels, label_freq = np.unique(self.nearest_k_labels, return_counts=True)
+    
+            prob = label_freq / self.nearest_k_labels.size
+            
+            if class_label_1 in unique_labels:
+                class_1_prob = float(prob[np.where(unique_labels == class_label_1)[0][0]])
+            else:
+                class_1_prob = 0.0  
+  
+            self.raw_probs.append(class_1_prob)          
            
             if len(np.unique(self.nearest_k_labels)) == 1:  # All labels are the same
                 self.predictions[index] = self.nearest_k_labels[0]
@@ -161,14 +176,16 @@ class KNN():
                     self.predictions[index] = self.nearest_k_labels[tied_indices][min_distance_index]  # Select the label with the smallest distance
                 else:
                     self.predictions[index] = labels[max_count_indices[0]]  # Select the most frequent label
+ 
+        print('probs', self.raw_probs) # GOT THE PROBS!
   
     def _train_platt_model(self):
         
-        self.platt_Y_train = self.platt_kwargs.get('Y_train', self.nearest_k_labels)[:self.K]
+        self.platt_Y_train = self.platt_kwargs.get('Y_train', self.nearest_k_labels)[:self.testing_size]
         self.platt_alpha = self.platt_kwargs.get('alpha', .01) 
         self.platt_epochs = self.platt_kwargs.get('epochs', 1000) 
         self.platt_metric_freq = self.platt_kwargs.get('metric_freq', None) 
-        
+       
         self.probs, _, self.platt_train_loss, self.platt_train_acc = self.platt_model.platt_train(model_output = self.nearest_k_distances.T, Y_train = self.platt_Y_train, alpha = self.platt_alpha, epochs = self.platt_epochs, metric_freq = self.platt_metric_freq) 
             
     def _test_platt_model(self):

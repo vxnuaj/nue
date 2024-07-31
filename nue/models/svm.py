@@ -65,7 +65,7 @@ class SVM():
 
         return self.train_loss, self.train_acc, self.__params
 
-    def test(self, X_test:np.ndarray, Y_test:np.ndarray, return_probs:bool = False, platt_kwargs:dict = {}): # TODO -- add ability to use holdout set for platt scaling.
+    def test(self, X_test:np.ndarray, Y_test:np.ndarray, return_probs:bool = False, platt_kwargs:dict = {}, zero_one = True):
         '''
         Test the SVM
        
@@ -92,38 +92,31 @@ class SVM():
         self.Y_test = Y_test
         self.return_probs = return_probs
         self.platt_kwargs = platt_kwargs
+        self.zero_one = zero_one
        
         print("SVM Testing!\n")
         w, b = self.__params
-        self.raw_output = np.dot(w, X_test.T) + b
-        self.test_loss = svm_hinge_loss(self.predictions, self.Y_test.T, self.__params, modality = self.modality, C = self.C)
+        self.raw_output = np.dot(w, self.X_test.T) + b
+        self.test_loss = svm_hinge_loss(self.raw_output, self.Y_test.T, self.__params, modality = self.modality, C = self.C)
         self.test_acc, _ = svm_accuracy(self.Y_test.T, self.raw_output)
-        self.predictions = np.sign(self.raw_output) 
+        
+        if self.zero_one:   
+            self.predictions = self._0_1_label(np.sign(self.raw_output))
+        elif self.zero_one == False:
+            self.predictions = np.sign(self.raw_output)
         
         if self.return_probs:
-            try: 
-                seed = self.platt_kwargs.get('seed', 1) 
-                verbose_train = self.platt_kwargs.get('verbose_train', False) 
-                verbose_test = self.platt_kwargs.get('verbose_test', False) 
-            except:
-                seed = 1
-                verbose_train = False
-                verbose_test = False 
-            
-            self.platt_model = _PlattScaling(seed = seed, verbose_train = verbose_train, verbose_test = verbose_test)
+            _init_dict = {k:v for k, v in self.platt_kwargs.items() if k in ['seed', 'verbose_train', 'verbose_test']}
+            _, self.raw_output = self.inference(self.X_train, self.Y_train, return_raw_score= True) 
+            self.platt_model = _PlattScaling(**_init_dict)
             self._train_platt_model()
-       
-            print(f"SVM Tested!") 
- 
+            print(f"\nSVM Tested!") 
             if self.verbose_test:
                 print(f"SVM Test Loss: {self.test_loss}")
                 print(f"SVM Test Accuracy: {self.test_acc}%")
                 print(f"SVM Test Probabilities:\n\n{self.probs.flatten()}") 
-        
             return self.test_loss, self.test_acc, self.predictions, self.probs.flatten()
-
         print(f"SVM Tested!")
-
         if self.verbose_test:
                 print(f"SVM test loss: {self.test_loss}")
                 print(f"SVM test accuracy: {self.test_acc}%\n")
@@ -313,18 +306,21 @@ class SVM():
             print(f"Train loss: {self.train_loss} | Train accuracy: {self.train_acc}%")  
 
     def _train_platt_model(self):
-      
-        self.platt_Y_train = self.platt_kwargs.get('Y_train', self.Y_train)
-        self.platt_alpha = self.platt_kwargs.get('alpha', .0001) 
-        self.platt_epochs = self.platt_kwargs.get('epochs', 1000) 
-        self.platt_metric_freq = self.platt_kwargs.get('metric_freq', None) 
-        self.probs, _, self.platt_train_loss, self.platt_train_acc = self.platt_model.platt_train(model_output = self.raw_output, Y_train = self.platt_Y_train, alpha = self.platt_alpha, epochs = self.platt_epochs, metric_freq = self.platt_metric_freq) 
+     
+        _train_dict = {k:v for k, v in self.platt_kwargs.items() if k in ['Y_train', 'alpha', 'epochs', 'metric_freq']}
+        self.platt_Y_train = _train_dict.get('Y_train', self.Y_train)
+        print('svmytrian', self.platt_Y_train.shape)
+        self.probs, _, self.platt_train_loss, self.platt_train_acc = self.platt_model.platt_train(Y_train = self.platt_Y_train, model_output = self.raw_output, **_train_dict)
             
     def _test_platt_model(self):
       
         self.platt_X_test = self.platt_kwargs.get('X_test', self.X_test)
         self.platt_Y_test = self.platt_kwargs.get('Y_test', self.Y_test)
         self.probs, _, self.platt_test_loss, self.platt_test_acc = self.platt_model.platt_inf(model_output = self.raw_output.T, Y_inf = self.platt_Y_test)
+       
+    def _0_1_label(self, pred):
+        pred = np.where(pred == -1, 0, 1) 
+        return pred
         
     @property
     def X_train(self):
