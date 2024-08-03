@@ -177,14 +177,11 @@ class LogisticRegression:
         
         for epoch in range(self.epochs):
             self._output = self._forward()
-
             self.train_loss = log_loss(self.Y_train.T, self._output)
             self.train_acc = logistic_accuracy(self.Y_train.T, self._output)
-
             self.__gradients = self._backward()
             self.__params = self._update()
-
-
+            
             if self.verbose_train == True and self.metric_freq is not None:
                 if epoch % self.metric_freq == 0: 
                     print(f"Epoch: {epoch}")

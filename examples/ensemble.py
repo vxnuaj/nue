@@ -4,16 +4,16 @@ from nue.preprocessing import x_y_split, train_test_split, csv_to_numpy
 
 ''' Pre-processing data '''
 
-train = csv_to_numpy('data/ensembleTrain.csv')
-test = csv_to_numpy('data/ensembleTest.csv')
+train = csv_to_numpy('data/EnsembleTrain.csv')
+test = csv_to_numpy('data/EnsembleTest.csv')
 
 X_train, Y_train = x_y_split(train, y_col = 'last')
 X_test, Y_test = x_y_split(test, y_col = 'last')
 
 ''' Initializing Models '''
 
-verbose_train = True
-verbose_test = True
+verbose_train = False
+verbose_test = False
 seed = 1
 voting = 'soft'
 weights = None
@@ -25,11 +25,12 @@ knn = KNN(verbose_test=verbose_test)
 dtree = DecisionTree(verbose_train = verbose_train, verbose_test=verbose_test)
 platt_kwargs = {
     'seed':1,
-    'verbose_train': True,
+    'verbose_train': False,
     'verbose_test': False,
     'alpha': .01,
     'epochs': 1500,
-    'metric_freq': 750
+    'metric_freq': 750,
+    'Y_test': Y_test
 }
 
 
@@ -38,7 +39,8 @@ platt_kwargs = {
 logreg = {
   
     'logreg!': log_reg,
-    'epochs': 5000,
+    'epochs': 10000,
+    'alpha': .1,
     'metric_freq': 1000,
     'platt_kwargs': platt_kwargs
 }

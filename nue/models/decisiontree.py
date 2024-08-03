@@ -106,7 +106,7 @@ class DecisionTree():
             self.test_metrics()
         
         if self.return_probs:
-            return self.test_uncertainty, self.test_acc, pred, probs
+            return self.test_uncertainty, self.test_acc, pred, np.array(probs).flatten()
         else:
             return self.test_uncertainty, self.test_acc, pred
     

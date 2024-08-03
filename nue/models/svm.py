@@ -110,6 +110,7 @@ class SVM():
             _, self.raw_output = self.inference(self.X_train, self.Y_train, return_raw_score= True) 
             self.platt_model = _PlattScaling(**_init_dict)
             self._train_platt_model()
+            self._inf_platt_model()
             print(f"\nSVM Tested!") 
             if self.verbose_test:
                 print(f"SVM Test Loss: {self.test_loss}")
@@ -309,13 +310,13 @@ class SVM():
      
         _train_dict = {k:v for k, v in self.platt_kwargs.items() if k in ['Y_train', 'alpha', 'epochs', 'metric_freq']}
         self.platt_Y_train = _train_dict.get('Y_train', self.Y_train)
-        print('svmytrian', self.platt_Y_train.shape)
         self.probs, _, self.platt_train_loss, self.platt_train_acc = self.platt_model.platt_train(Y_train = self.platt_Y_train, model_output = self.raw_output, **_train_dict)
             
-    def _test_platt_model(self):
-      
-        self.platt_X_test = self.platt_kwargs.get('X_test', self.X_test)
-        self.platt_Y_test = self.platt_kwargs.get('Y_test', self.Y_test)
+    def _inf_platt_model(self):
+        
+        self.platt_Y_test = self.platt_kwargs.get('Y_test', self.Y_test)  
+        w, b = self.__params 
+        self.raw_output = np.dot(w, self.X_test.T) + b
         self.probs, _, self.platt_test_loss, self.platt_test_acc = self.platt_model.platt_inf(model_output = self.raw_output.T, Y_inf = self.platt_Y_test)
        
     def _0_1_label(self, pred):

@@ -26,6 +26,9 @@ return_probs = True
 
 ''' Instantiating model '''
 
+print('ytrain', Y_train.shape)
+print('xtrain', X_train.shape)
+
 model = LogisticRegression(seed = 1, verbose_test = verbose_test, verbose_train = verbose_train)
 
 ''' Training and Testing the model '''

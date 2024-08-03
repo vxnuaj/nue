@@ -20,6 +20,8 @@ verbose_test = True
 platt_train_verbose = True
 platt_test_verbose = True
 return_probs = True
+platt_kwargs = {'seed': 1, 'verbose_train': False, 'verbose_test': False, 'Y_train': Y_train, 'alpha': .1, 'epochs': 10000, 'verbose_test':verbose_test}
+
 
 ''' Instantiating SVM '''
 

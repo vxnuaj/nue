@@ -83,6 +83,7 @@ class KNN():
         self.test_acc = knn_accuracy(self.Y_test.flatten(), self.predictions) 
            
         if self.return_probs:
+            ''' PLATT MODEL UNRELIABLE FOR KNN -- UNUSABLE UNTIL FIX.
             try:
                 seed = self.platt_kwargs.get('seed', 1)
                 verbose_train = self.platt_kwargs.get('verbose_train', True)
@@ -94,20 +95,15 @@ class KNN():
                 
             self.platt_model = _PlattScaling(seed = seed, verbose_train = verbose_train, verbose_test = verbose_test) 
             self._train_platt_model() 
-            
-            print(f"KNN Finished Testing")
-
+        '''    
             if self.verbose_test:
-                print(f"KNN Test Accurascy: {self.test_acc}")
-                print(f"KNN Test Probabilities: {self.probs.flatten()}")
-
-            return self.test_acc, self.predictions, self.probs.flatten()
+                print(f"KNN Test Accuracy: {self.test_acc}")
+                print(f"KNN Test Probabilities:\n\n{self.raw_probs.flatten()}")
+            return self.test_acc, self.predictions, self.raw_probs.flatten()
 
         print(f"KNN Finished Testing")
-
         if self.verbose_test:
             print(f"KNN Accuracy: {self.test_acc}%")
-       
         return self.test_acc, self.predictions 
       
     def _predict_brute(self):
@@ -134,7 +130,7 @@ class KNN():
             raise ValueError("K must not be greater than the number of samples in the training set!")
    
         self.predictions = np.empty(self.X_test.shape[0], dtype = self.Y_test.dtype)
-        self.raw_probs = []
+        self.raw_probs = np.empty(self.X_test.shape[0], dtype = self.Y_test.dtype)
 
         class_label_1 = 1
 
@@ -144,10 +140,10 @@ class KNN():
             if self.verbose_test == True:
                 print(f"Sample: {index}")'''
             
-            self.distances = np.linalg.norm(self.X_train - test_row, ord = self.distance_metric, axis = 1) # Takes the difference in L2 size of X_train and the testing data
-            self.nearest_k_distances = np.sort(self.distances)[:self.K].reshape(-1, 1) # Returns the nearest K distances. 
-            self.nearest_k_index = np.argsort(self.distances)[:self.K] # Yields the indices of the lowest distances of X_train up to the kth value 
-            self.nearest_k_labels = self.Y_train[self.nearest_k_index] # Indexes Y_train, gets the labels of the corresponding values the lowest distance based on their indices as previously assigned
+            self.distances = np.linalg.norm(self.X_train - test_row, ord = self.distance_metric, axis = 1)
+            self.nearest_k_distances = np.sort(self.distances)[:self.K].reshape(-1, 1) 
+            self.nearest_k_index = np.argsort(self.distances)[:self.K] 
+            self.nearest_k_labels = self.Y_train[self.nearest_k_index] 
         
             unique_labels, label_freq = np.unique(self.nearest_k_labels, return_counts=True)
     
@@ -158,40 +154,39 @@ class KNN():
             else:
                 class_1_prob = 0.0  
   
-            self.raw_probs.append(class_1_prob)          
-           
-            if len(np.unique(self.nearest_k_labels)) == 1:  # All labels are the same
+            self.raw_probs[index] = class_1_prob
+            self.raw_probs = self.raw_probs.reshape(-1, 1) 
+            
+            if len(np.unique(self.nearest_k_labels)) == 1:
                 self.predictions[index] = self.nearest_k_labels[0]
             else:
                 # Handle tie-breaking by distance
-                labels, counts = np.unique(self.nearest_k_labels, return_counts=True)  # Get unique labels and their counts
-                max_count_indices = np.where(counts == np.max(counts))[0]  # Indices of labels with the highest count
+                labels, counts = np.unique(self.nearest_k_labels, return_counts=True)  
+                max_count_indices = np.where(counts == np.max(counts))[0] 
 
-                if len(max_count_indices) > 1:  # Tie in the counts
-                    tied_labels = labels[max_count_indices]  # Labels that are tied
-                    tied_indices = np.isin(self.nearest_k_labels, tied_labels)  # Indices in nearest_k_labels that are tied
-                    tied_distances =self.distances[self.nearest_k_index][tied_indices]  # Distances of the tied labels
+                if len(max_count_indices) > 1: 
+                    tied_labels = labels[max_count_indices]  
+                    tied_indices = np.isin(self.nearest_k_labels, tied_labels)  
+                    tied_distances =self.distances[self.nearest_k_index][tied_indices]  
 
-                    min_distance_index = np.argmin(tied_distances)  # Index of the tied label with the smallest distance
-                    self.predictions[index] = self.nearest_k_labels[tied_indices][min_distance_index]  # Select the label with the smallest distance
+                    min_distance_index = np.argmin(tied_distances) 
+                    self.predictions[index] = self.nearest_k_labels[tied_indices][min_distance_index] 
                 else:
-                    self.predictions[index] = labels[max_count_indices[0]]  # Select the most frequent label
- 
-        print('probs', self.raw_probs) # GOT THE PROBS!
-  
+                    self.predictions[index] = labels[max_count_indices[0]]
+
     def _train_platt_model(self):
         
-        self.platt_Y_train = self.platt_kwargs.get('Y_train', self.nearest_k_labels)[:self.testing_size]
-        self.platt_alpha = self.platt_kwargs.get('alpha', .01) 
+        self.platt_Y_train = self.platt_kwargs.get('Y_train', self.nearest_k_labels)[:self.testing_size].reshape(-1, 1)
+        self.platt_alpha = self.platt_kwargs.get('alpha', .001) 
         self.platt_epochs = self.platt_kwargs.get('epochs', 1000) 
         self.platt_metric_freq = self.platt_kwargs.get('metric_freq', None) 
-       
-        self.probs, _, self.platt_train_loss, self.platt_train_acc = self.platt_model.platt_train(model_output = self.nearest_k_distances.T, Y_train = self.platt_Y_train, alpha = self.platt_alpha, epochs = self.platt_epochs, metric_freq = self.platt_metric_freq) 
+   
+        self.probs, _, self.platt_train_loss, self.platt_train_acc = self.platt_model.platt_train(model_output = self.raw_probs, Y_train = self.platt_Y_train, alpha = self.platt_alpha, epochs = self.platt_epochs, metric_freq = self.platt_metric_freq) 
             
     def _test_platt_model(self):
         self.platt_X_test = self.platt_kwargs.get('X_test', self.X_test)
         self.platt_Y_test = self.platt_kwargs.get('Y_test', self.Y_test)
-        self.probs, _, self.platt_test_loss, self.platt_test_acc = self.platt_model.platt_inf(model_output = self.nearest_k_distances.T, Y_inf = self.platt_Y_test)
+        self.probs, _, self.platt_test_loss, self.platt_test_acc = self.platt_model.platt_inf(model_output = self.raw_probs, Y_inf = self.platt_Y_test)
         
     def metrics(self):
         '''

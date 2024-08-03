@@ -4,37 +4,6 @@ import time
 from nue.metrics import accuracy
 from termcolor import colored
 
-'''
-TODO 
-- [X] Ensemble Train Method
-    - [X] Refactor train methods of each model
-    - [X] Build the train function
-
-- [ ] Ensemble Predict / Test Method
-    - [X] Refactor test methods of each model.
-    - [ ] Build the testing for soft / hard:
-        - [X] Ensure all models have the ability to return probabilities.
-            - [X] SVMs
-                - [X] Ensure that probabilities are returned with respect to it being 1
-            - [X] Log Reg
-            - [X] KNN
-                - [X] Ensure that probabilities are returned with respect to it being 1
-            - [X] Decision Tree
-                - [X] Ensure thast probabilitie asre returned with respect to it being 1
-        - [X] Need the KNN to output the same # of predictions as the other models. Otherwise, won't work.  
-        - [X] Insert Hard Majority Voting to compute predictions
-        - [ ] Insert Soft Majority Voting to compute predictions.
-            - [X] The KNN needs to propertly output probabilities. Calculate the probabilities as looking at the nearest k labels and getting their ratio. 
-            - [ ] Feed that raw output to the logistic regression to platt scale.
-            
-            
-            
------ notes -------
-
-> Just need to continue now            
-
-'''
-
 class EnsembleClassifier:
     
     '''
@@ -88,14 +57,15 @@ class EnsembleClassifier:
         self.voting = voting
         self.weights = weights
         self.tested_models = [self._test_models(model) for model in self.trained_models]   
-        self.prediction = self._hard_prediction()
-        
+
+        if self.voting == 'hard':
+            self.prediction = self._hard_prediction()
+        elif self.voting == 'soft':
+            self.prediction = self._soft_predictions()
         self.accuracy = accuracy(self.Y_test.flatten(), self.prediction)
 
-        if self.verbose_test:
-            print(colored('\nENSEMBLE RESULTS\n', 'green', attrs = ['bold', 'underline']))
-            print(f"Accuracy: {self.accuracy}%")
-            print(f"Predictions:\n\n{self.prediction}")
+        print(colored('\nENSEMBLE RESULTS\n', 'green', attrs = ['bold', 'underline']))
+        print(f"Accuracy: {self.accuracy}%")
         
         return self.prediction
         
@@ -192,7 +162,6 @@ class EnsembleClassifier:
         elif self.voting == 'soft':
             test_loss, test_acc, preds, probs = model_instance.test(self.X_test, self.Y_test, return_probs = True, **test_hyparams)
             tested_model = {model_id: model_instance, **dict(model_args), 'Testing Loss': test_loss, 'Testing Accuracy': test_acc, 'Predictions': preds, 'Probabilities': probs}
-            print(tested_model)
         return tested_model
         
     def _test_knn(self, model):
@@ -207,7 +176,6 @@ class EnsembleClassifier:
         elif self.voting == 'soft':
             test_acc, preds, probs = model_instance.test(self.X_test, self.Y_test, return_probs = True, **test_hyparams) 
             tested_model = {model_id: model_instance, **dict(model_args), 'Testing Accuracy': test_acc, 'Predictions': preds, 'Probabilities': probs}
-            print(tested_model) 
         return tested_model 
         
     def _test_decision_tree(self, model):
@@ -221,7 +189,6 @@ class EnsembleClassifier:
         elif self.voting == 'soft':
             uncertainty, test_acc, preds, probs = model_instance.test(self.X_test, self.Y_test, return_probs = True)
             tested_model = {model_id: model_instance, **dict(model_args), 'Uncertainty': uncertainty, 'Testing Accuracy': test_acc, 'Predictions': preds, 'Probabilities':probs}  
-            print(tested_model)
         return tested_model
 
     def _test_logistic_regression(self, model):
@@ -235,23 +202,27 @@ class EnsembleClassifier:
         elif self.voting == 'soft':
             test_loss, test_acc, preds, probs = model_instance.test(self.X_test, self.Y_test, return_probs = True)
             tested_model = {model_id: model_instance, **dict(model_args), 'Testing Loss': test_loss, 'Testing Accuracy': test_acc, "Predictions": preds, 'Probabilities': probs}    
-            print(tested_model)
         return tested_model
   
     def _hard_prediction(self):
-      
         self.model_preds = []
-       
         for model in self.tested_models:
-            # get a new dict of modelname:modelinstance, 'predictions': predictions
-            model_id, model_instance = list(model.items())[0] # gets the model id and instance
             predictions = model['Predictions'].flatten() 
             self.model_preds.append(predictions) 
         self.model_preds = np.array(self.model_preds)
         self.majority_pred = np.max(self.model_preds, axis = 0).flatten()
-
         return self.majority_pred
-    
+  
+    def _soft_predictions(self):
+        self.model_probs = []
+        for model in self.tested_models:
+            probabilities = model['Probabilities'].flatten()
+            self.model_probs.append(probabilities)
+        np_probs = np.array(self.model_probs)
+        mean_probs = np.mean(np_probs, axis = 0)
+        self.majority_preds = np.where(mean_probs > .5, 1, 0)
+        return self.majority_preds        
+
     @property
     def models(self):
         return self._models

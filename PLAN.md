@@ -14,6 +14,9 @@
 
 <details> <summary> Phase 2</summary>
 
+**PRESENT MOMENT:**
+
+  - [ ] Implement Bagging
 
 ## 1. Validate or add Models
 - [X] Linear Regression
@@ -32,10 +35,9 @@
     - [X] Log Reg
     - [X] KNN
     - [X] SVM
-  - [ ] Hard Voting
-  - [ ] Soft Voting
-  - [ ] Implementing / Computing total error via binomial distribution (irreducible or overall error? I'm thinking overall.)
-  - [ ] Validate for all models.
+  - [X] Hard Voting
+  - [x] Soft Voting
+
 - [ ] Bagging Implementation
   - [ ] Utility function (preprocessing) to draw samples from a uniform distribution.
 - [ ] Random Forest Implementation
