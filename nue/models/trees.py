@@ -475,8 +475,9 @@ class Node():
 
 
 class RandomTree:
-    def __init__(self, verbose_train = False):
+    def __init__(self, verbose_train = False, n_extremely_randomized_feats = None):
         self.verbose_train = verbose_train
+        self.n_extremely_randomized_feats = n_extremely_randomized_feats
         self.root = None # the model isn't trained if None
         self.n_leaf = 0 # number of leaf nodes. at init is 0
 
@@ -544,7 +545,22 @@ class RandomTree:
         best_gain = -1
         
         feat_idxs = np.array([np.random.randint(low = 0, high = X.shape[1]) for feat in range(self.max_features)])
-        
+       
+        if self.n_extremely_randomized_feats:
+            for feat_idx in feat_idxs:
+                X_col = X[:, feat_idx]
+                thresholds = np.unique(X_col)
+                thresh_idxs =  np.random.randint(low = 0, high=X_col.size, size = self.n_extremely_randomized_feats)
+                
+                for thresh_idx in thresh_idxs:
+                    thresh_val = X_col[thresh_idx] 
+                    inf_gain = self._inf_gain(X_col, Y, thresh_val)
+                    if inf_gain > best_gain:
+                        best_gain = inf_gain
+                        best_thresh = thresh_val
+                        best_feat = feat_idx
+            return best_thresh, best_feat
+
         for feat_idx in feat_idxs:
             X_col = X[:, feat_idx]
             thresholds = np.unique(X_col)
@@ -617,74 +633,3 @@ class RandomTree:
             elif x[node.feature] < node.threshold:
                 node = node.left_node
         return node.value
-
-class RandomForest:
-
-    def __init__(self, verbose_train = False):
-        self.verbose_train = verbose_train
-
-    def train(self, X_train, Y_train, max_features = 5, n_bootstraps = 10, rtree_dict = None, alpha_range = None):
-        self.X_train = X_train
-        self.Y_train = Y_train
-        self.max_features = max_features
-        self.n_bootstraps = n_bootstraps
-        self.rtree_dict = rtree_dict
-        self.alpha_range = alpha_range
-        self.models = []
-
-        self._get_dicts()
-        
-        for i in range(n_bootstraps):
-            b_idx = self._bootstrap_idx()
-            model = RandomTree(**self._init_dict)
-            print(f"Training Tree #{i}")
-            model.train(X_train[b_idx],Y_train[b_idx], max_features = self.max_features, **self._train_dict)
-            self.models.append(model)
-
-        print(f"\nAll {i} Trees have finished Training.\n")
-
-    def test(self, X_test, Y_test):
-        self.X_test = X_test
-        self.Y_test = Y_test
-        self.preds = []
-
-        for model in self.models:
-            preds = model.test(self.X_test, self.Y_test)
-            self.preds.append(preds)
-           
-        self._get_preds()        
-        self._accuracy()
-        
-        print(f"\nFinal Forest Accuracy: {self.accuracy}")
-
-    def _get_dicts(self):
-        self._init_dict = {k:v for k,v in self.rtree_dict.items() if k in ['verbose_train']}
-        self._train_dict = {k:v for k,v in self.rtree_dict.items() if k in ['min_node_samples', 'max_depth', 'criterion']}
-
-    def _bootstrap_idx(self):
-        n_samples = self.Y_train.size
-        b_idx = np.random.randint(low = 0, high = n_samples, size = n_samples)
-        return b_idx
-
-    def _get_preds(self):
-        self.preds = np.array(self.preds)
-        self.preds = np.apply_along_axis(self._most_common_label, axis = 0, arr = self.preds)
-
-    def _most_common_label(self, preds):
-        pred, freqs = np.unique(preds, return_counts = True)
-        most_common_idx = np.argmax(freqs)
-        return pred[most_common_idx]
-
-    def _accuracy(self):
-        self.accuracy = np.sum(self.preds.flatten() == self.Y_test.flatten()) / self.Y_test.size * 100
-        
-
-    @property
-    def max_features(self):
-        return self._max_features
-
-    @max_features.setter
-    def max_features(self, max_features):
-        assert 0 < max_features < self.X_train.shape[1], "max_features can't be or exceed the total number of features in X_train."
-        self._max_features = max_features
-

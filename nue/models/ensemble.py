@@ -81,8 +81,9 @@ class BaggedTrees:
 
 class RandomForest:
 
-    def __init__(self, verbose_test = False):
+    def __init__(self, verbose_test = False, n_extremely_randomized_feats = None):
         self.verbose_test = verbose_test
+        self.n_extremely_randomized_feats = n_extremely_randomized_feats
 
     def train(self, X_train, Y_train, max_features = 5, n_bootstraps = 10, rtree_dict = None):
         self.X_train = X_train
@@ -96,9 +97,10 @@ class RandomForest:
         
         for i in range(n_bootstraps):
             b_idx = self._bootstrap_idx()
-            model = RandomTree(**self._init_dict)
+            model = RandomTree(n_extremely_randomized_feats = self.n_extremely_randomized_feats, **self._init_dict)
             print(f"Training Tree #{i}")
             model.train(X_train[b_idx],Y_train[b_idx], max_features = self.max_features, **self._train_dict)
+            print(model.n_extremely_randomized_feats)
             self.models.append(model)
 
         print(f"\nAll {i} Trees have finished Training.\n")
