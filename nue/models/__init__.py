@@ -34,5 +34,5 @@ from nue.models.linreg import LinearRegression
 from nue.models.logreg import LogisticRegression
 from nue.models.knn import KNN
 from nue.models.svm import SVM
-from nue.models.decisiontree import DecisionTree
-from nue.models.ensemble import MajorityClassifier, BaggedTrees
+from nue.models.trees import DecisionTree, RandomTree
+from nue.models.ensemble import MajorityClassifier, BaggedTrees, RandomForest

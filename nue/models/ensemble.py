@@ -1,9 +1,11 @@
 import numpy as np
 import pprint
 import time
-from nue.models import DecisionTree
+from nue.models import DecisionTree, RandomTree
 from nue.metrics import accuracy
 from termcolor import colored
+
+# ----- Bagged Trees (bagging) ----- 
 
 class BaggedTrees:
     def __init__(self, verbose_test = False):
@@ -45,6 +47,8 @@ class BaggedTrees:
         if self.verbose_test:
             print(f"\nFinal BaggedTrees Test Accuracy: {self.accuracy}%")
 
+        return self._preds, self.accuracy
+
     def _bootstrap_samples(self, X, Y):
         bootstrap_idx = np.random.randint(low = 0, high = Y.size, size = (X.shape[0]))
         X_bootstrap = X[bootstrap_idx]
@@ -72,6 +76,72 @@ class BaggedTrees:
     def _accuracy(self, Y, preds):
         acc = np.sum(Y.flatten() == preds.flatten()) / Y.size * 100
         return acc
+
+# ----- Random Forest ------
+
+class RandomForest:
+
+    def __init__(self, verbose_test = False):
+        self.verbose_test = verbose_test
+
+    def train(self, X_train, Y_train, max_features = 5, n_bootstraps = 10, rtree_dict = None):
+        self.X_train = X_train
+        self.Y_train = Y_train
+        self.max_features = max_features
+        self.n_bootstraps = n_bootstraps
+        self.rtree_dict = rtree_dict
+        self.models = []
+
+        self._get_dicts()
+        
+        for i in range(n_bootstraps):
+            b_idx = self._bootstrap_idx()
+            model = RandomTree(**self._init_dict)
+            print(f"Training Tree #{i}")
+            model.train(X_train[b_idx],Y_train[b_idx], max_features = self.max_features, **self._train_dict)
+            self.models.append(model)
+
+        print(f"\nAll {i} Trees have finished Training.\n")
+
+    def test(self, X_test, Y_test):
+        self.X_test = X_test
+        self.Y_test = Y_test
+        self.preds = []
+
+        for model in self.models:
+            preds = model.test(self.X_test, self.Y_test)
+            self.preds.append(preds)
+           
+        self._get_preds()        
+        self._accuracy()
+       
+        if self.verbose_test:
+            print(f"\nFinal Forest Accuracy: {self.accuracy}")
+
+        return self.preds, self.accuracy 
+
+    def _get_dicts(self):
+        self._init_dict = {k:v for k,v in self.rtree_dict.items() if k in ['verbose_train']}
+        self._train_dict = {k:v for k,v in self.rtree_dict.items() if k in ['min_node_samples', 'max_depth', 'criterion', 'alpha']}
+
+    def _bootstrap_idx(self):
+        n_samples = self.Y_train.size
+        b_idx = np.random.randint(low = 0, high = n_samples, size = n_samples)
+        return b_idx
+
+    def _get_preds(self):
+        self.preds = np.array(self.preds)
+        self.preds = np.apply_along_axis(self._most_common_label, axis = 0, arr = self.preds)
+
+    def _most_common_label(self, preds):
+        pred, freqs = np.unique(preds, return_counts = True)
+        most_common_idx = np.argmax(freqs)
+        return pred[most_common_idx]
+
+    def _accuracy(self):
+        self.accuracy = np.sum(self.preds.flatten() == self.Y_test.flatten()) / self.Y_test.size * 100
+
+# ----- majority classifier -----
 
 class MajorityClassifier:
     
