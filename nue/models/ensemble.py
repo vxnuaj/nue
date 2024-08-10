@@ -5,6 +5,74 @@ from nue.models import DecisionTree
 from nue.metrics import accuracy
 from termcolor import colored
 
+class BaggedTrees:
+    def __init__(self, verbose_test = False):
+        self.verbose_test = verbose_test
+        self._preds = []
+        
+    def train(self, X_train, Y_train, n_bootstrap, dtree_dict, alpha_range:tuple = None):
+        self.X_train = X_train
+        self.Y_train = Y_train
+        self.n_bootstrap = n_bootstrap
+        self.dtree_dict = dtree_dict
+        self.alpha_range = alpha_range
+        self.models = []
+
+        for i in range(n_bootstrap):
+            print(f"\nTraining Tree {i}")
+            X_bootstrap, Y_bootstrap = self._bootstrap_samples(self.X_train, self.Y_train)
+            if self.alpha_range:
+                model_init = {k:v for k,v in dtree_dict.items() if k in ['verbose_train', 'verbose_test']}
+                model_train = {k:v for k,v in dtree_dict.items() if k in ['modality', 'max_depth', 'min_sample_split']}
+                alpha = np.random.uniform(low = alpha_range[0], high = alpha_range[1])
+                model = DecisionTree(**model_init)
+                model.train(X_bootstrap, Y_bootstrap, alpha = alpha, **model_train)
+            else:
+                model_init = {k:v for k,v in dtree_dict.items() if k in ['verbose_train', 'verbose_test']}
+                model_train = {k:v for k,v in dtree_dict.items() if k in ['max_depth', 'min_sample_split', 'alpha', 'modality']} # instead of drawing alpha, could use a random alpha value for different models in the ensemble, drawn randomly
+                model = DecisionTree(**model_init)
+                model.train(X_bootstrap, Y_bootstrap, **model_train)
+
+            self.models.append(model)
+            
+    def test(self, X_test, Y_test):
+        self.X_test = X_test
+        self.Y_test = Y_test
+      
+        self._preds = self._get_model_pred()
+        self.accuracy = self._accuracy(Y_test, self._preds)
+
+        if self.verbose_test:
+            print(f"\nFinal BaggedTrees Test Accuracy: {self.accuracy}%")
+
+    def _bootstrap_samples(self, X, Y):
+        bootstrap_idx = np.random.randint(low = 0, high = Y.size, size = (X.shape[0]))
+        X_bootstrap = X[bootstrap_idx]
+        Y_bootstrap = Y[bootstrap_idx]
+        return X_bootstrap, Y_bootstrap
+           
+    def _get_model_pred(self):
+
+        all_preds = [ ]
+
+        for model in self.models:
+            _, _, pred = model.test(self.X_test, self.Y_test)
+            all_preds.append(pred)
+        all_preds = np.array(all_preds)
+
+        pred = np.apply_along_axis(self._most_common, axis = 0, arr = all_preds)
+        self._preds.append(pred)
+        return np.array(self._preds)
+
+    def _most_common(self, all_preds):
+        labels, freqs = np.unique(all_preds, return_counts = True)
+        most_common_idx = np.argmax(freqs)
+        return labels[most_common_idx]
+
+    def _accuracy(self, Y, preds):
+        acc = np.sum(Y.flatten() == preds.flatten()) / Y.size * 100
+        return acc
+
 class MajorityClassifier:
     
     '''
@@ -223,73 +291,4 @@ class MajorityClassifier:
         mean_probs = np.mean(np_probs, axis = 0)
         self.majority_preds = np.where(mean_probs > .5, 1, 0)
         return self.majority_preds        
-
-class BaggedTrees:
-    def __init__(self, verbose_test = False):
-        self.verbose_test = verbose_test
-        self._preds = []
-        
-    def train(self, X_train, Y_train, n_bootstrap, dtree_dict, alpha_range:tuple = None):
-        self.X_train = X_train
-        self.Y_train = Y_train
-        self.n_bootstrap = n_bootstrap
-        self.dtree_dict = dtree_dict
-        self.alpha_range = alpha_range
-        self.models = []
-
-        for i in range(n_bootstrap):
-            print(f"\nTraining Tree {i}")
-            X_bootstrap, Y_bootstrap = self._bootstrap_samples(self.X_train, self.Y_train)
-            if self.alpha_range:
-                model_init = {k:v for k,v in dtree_dict.items() if k in ['verbose_train', 'verbose_test']}
-                model_train = {k:v for k,v in dtree_dict.items() if k in ['modality', 'max_depth', 'min_sample_split']}
-                alpha = np.random.uniform(low = alpha_range[0], high = alpha_range[1])
-                model = DecisionTree(**model_init)
-                model.train(X_bootstrap, Y_bootstrap, alpha = alpha, **model_train)
-            else:
-                model_init = {k:v for k,v in dtree_dict.items() if k in ['verbose_train', 'verbose_test']}
-                model_train = {k:v for k,v in dtree_dict.items() if k in ['max_depth', 'min_sample_split', 'alpha', 'modality']} # instead of drawing alpha, could use a random alpha value for different models in the ensemble, drawn randomly
-                model = DecisionTree(**model_init)
-                model.train(X_bootstrap, Y_bootstrap, **model_train)
-
-            self.models.append(model)
-            
-    def test(self, X_test, Y_test):
-        self.X_test = X_test
-        self.Y_test = Y_test
-      
-        self._preds = self._get_model_pred()
-        self.accuracy = self._accuracy(Y_test, self._preds)
-
-        if self.verbose_test:
-            print(f"\nFinal BaggedTrees Test Accuracy: {self.accuracy}%")
-
-    def _bootstrap_samples(self, X, Y):
-        bootstrap_idx = np.random.randint(low = 0, high = Y.size, size = (X.shape[0]))
-        X_bootstrap = X[bootstrap_idx]
-        Y_bootstrap = Y[bootstrap_idx]
-        return X_bootstrap, Y_bootstrap
-           
-    def _get_model_pred(self):
-
-        all_preds = [ ]
-
-        for model in self.models:
-            _, _, pred = model.test(self.X_test, self.Y_test)
-            all_preds.append(pred)
-        all_preds = np.array(all_preds)
-
-        pred = np.apply_along_axis(self._most_common, axis = 0, arr = all_preds)
-        self._preds.append(pred)
-        return np.array(self._preds)
-
-    def _most_common(self, all_preds):
-        labels, freqs = np.unique(all_preds, return_counts = True)
-        most_common_idx = np.argmax(freqs)
-        return labels[most_common_idx]
-
-    def _accuracy(self, Y, preds):
-        acc = np.sum(Y.flatten() == preds.flatten()) / Y.size * 100
-        return acc
-
 
