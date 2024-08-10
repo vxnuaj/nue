@@ -1,5 +1,5 @@
 import numpy as np
-from nue.models import SVM, KNN, DecisionTree, EnsembleClassifier, LinearRegression, LogisticRegression
+from nue.models import SVM, KNN, DecisionTree, MajorityClassifier, LinearRegression, LogisticRegression
 from nue.preprocessing import x_y_split, train_test_split, csv_to_numpy
 
 ''' Pre-processing data '''
@@ -78,11 +78,11 @@ decision_tree = {
 
 models = [logreg, svm, knn, decision_tree]
 
-''' Initializing Ensemble '''
+''' Initializing Majority Voting Classifier '''
 
-model = EnsembleClassifier(models, verbose_test=verbose_test)
+model = MajorityClassifier(models, verbose_test=verbose_test)
 
-''' Training the Ensemble models'''
+''' Training the Ensembled models'''
 
 model.train(X_train, Y_train)
 model.test(X_test, Y_test, voting = voting, weights = weights)

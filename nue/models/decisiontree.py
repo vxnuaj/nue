@@ -1,11 +1,14 @@
 import numpy as np
 from nue.metrics import dt_accuracy, entropy, gini
 
-
 class DecisionTree():
     
     '''
     Initialize the DecisionTree. 
+
+    :param verbose_train: The verbosity of the model output while training
+    :type verbose_train: bool :param verbose_Test: The verbosity of the model output while training
+    :type verbose_test: bool 
     ''' 
     
     def __init__(self, verbose_train = False, verbose_test = False):
@@ -76,7 +79,7 @@ class DecisionTree():
 
         if self.return_probs:
            
-            pred_and_prob = [self._traverse(x) for x in X_test]
+            pred_and_prob = [self._traverse(x) for x in self.X_test]
             pred, probs = zip(*pred_and_prob)
             pred = np.array(pred)
             
@@ -130,7 +133,7 @@ class DecisionTree():
         n_labels = len(np.unique(Y))
        
         # Stopping Criteria 
-        if (depth > self.max_depth or n_labels == 1 or n_samples < self.min_sample_split):
+        if (depth == self.max_depth or n_labels == 1 or n_samples < self.min_sample_split):
             self.n_leaf += 1
             leaf_value = self._most_common_label(Y)
             return Node(value = leaf_value, Y = Y) 
@@ -266,7 +269,6 @@ class DecisionTree():
         :return: The most common label in Y
         :rtype: float or int
         ''' 
-        
         unique_labels, counts = np.unique(Y.flatten(), return_counts = True)
         most_common_index = np.argmax(counts)
         return unique_labels[most_common_index]

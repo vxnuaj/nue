@@ -17,7 +17,7 @@ X_test, Y_test = X_test, Y_test.astype(int)
 
 max_depth = 1000
 min_sample_split = 2
-modality = 'entropy'
+modality = 'gini'
 
 alpha = .1
 verbose_train = True
@@ -31,8 +31,10 @@ model = DecisionTree(verbose_train = verbose_train, verbose_test = verbose_test)
 ''' Training and testing the Decision Tree'''
 
 model.train(X_train, Y_train, max_depth = max_depth, min_sample_split = min_sample_split, modality = modality, alpha = alpha)
-preds, probs, acc, uncertainty = model.test(X_test, Y_test, return_probs = True)
+print(X_train)
+'''preds, probs, acc, uncertainty = model.test(X_test, Y_test, return_probs = True)'''
 
 '''print('probs\n\n', probs, '\n\n')
 print('\npreds\n\n', preds, '\n\n')
 print('\nytest\n\n', Y_test.T, '\n\n')'''
+

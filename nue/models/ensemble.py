@@ -1,10 +1,11 @@
 import numpy as np
 import pprint
 import time
+from nue.models import DecisionTree
 from nue.metrics import accuracy
 from termcolor import colored
 
-class EnsembleClassifier:
+class MajorityClassifier:
     
     '''
     Initalize a set of Ensemble models.
@@ -90,7 +91,7 @@ class EnsembleClassifier:
       
     def _test_models(self, model): 
         model_meta = list(model.items())
-        _, model_instance = model_meta[0]
+        _, model_instance = model_meta[0] 
         model_name = type(model_instance).__name__ 
        
         if model_name == 'SVM':
@@ -223,59 +224,72 @@ class EnsembleClassifier:
         self.majority_preds = np.where(mean_probs > .5, 1, 0)
         return self.majority_preds        
 
-    @property
-    def models(self):
-        return self._models
-    
-    @models.setter
-    def models(self, models):
-        assert isinstance(models, list), "models must be in type dict, in form of 'model-name': model instance"
-        self._models = models 
+class BaggedTrees:
+    def __init__(self, verbose_test = False):
+        self.verbose_test = verbose_test
+        self._preds = []
         
-    @property
-    def voting(self):
-        return self._voting
-    
-    @voting.setter
-    def voting(self, voting):
-        assert isinstance(voting, str), "voting must be type str."
-        self._voting = voting
-        
-    @property 
-    def weights(self):
-        return self._weights
-    
-    @weights.setter
-    def weights(self, weights):
-        assert isinstance(weights, (type(None), np.ndarray)), "weights must be type numpy.ndarray."
-        self._weights = weights 
-        
-    @property
-    def X_train(self):
-        return self._X_train
-    
-    @X_train.setter
-    def X_train(self, X_train):
-        assert isinstance(X_train, np.ndarray), "X_train must be type numpy.ndarray"
-        self._X_train = X_train 
-    
-    @property
-    def Y_train(self):
-        return self._Y_train
-    
-    @Y_train.setter 
-    def Y_train(self, Y_train):
-        assert isinstance(Y_train, np.ndarray), 'Y_train must be type numpy.ndarray'
-        self._Y_train = Y_train
-       
-    @property 
-    def verbose_train(self):
-        return self._verbose_train
-    
-    @verbose_train.setter
-    def verbose_train(self, verbose):
-        assert isinstance(verbose, bool), 'verbose_train musat be type bool'
-        self._verbose_train = verbose 
-        
-        
-         
+    def train(self, X_train, Y_train, n_bootstrap, dtree_dict, alpha_range:tuple = None):
+        self.X_train = X_train
+        self.Y_train = Y_train
+        self.n_bootstrap = n_bootstrap
+        self.dtree_dict = dtree_dict
+        self.alpha_range = alpha_range
+        self.models = []
+
+        for i in range(n_bootstrap):
+            print(f"\nTraining Tree {i}")
+            X_bootstrap, Y_bootstrap = self._bootstrap_samples(self.X_train, self.Y_train)
+            if self.alpha_range:
+                model_init = {k:v for k,v in dtree_dict.items() if k in ['verbose_train', 'verbose_test']}
+                model_train = {k:v for k,v in dtree_dict.items() if k in ['modality', 'max_depth', 'min_sample_split']}
+                alpha = np.random.uniform(low = alpha_range[0], high = alpha_range[1])
+                model = DecisionTree(**model_init)
+                model.train(X_bootstrap, Y_bootstrap, alpha = alpha, **model_train)
+            else:
+                model_init = {k:v for k,v in dtree_dict.items() if k in ['verbose_train', 'verbose_test']}
+                model_train = {k:v for k,v in dtree_dict.items() if k in ['max_depth', 'min_sample_split', 'alpha', 'modality']} # instead of drawing alpha, could use a random alpha value for different models in the ensemble, drawn randomly
+                model = DecisionTree(**model_init)
+                model.train(X_bootstrap, Y_bootstrap, **model_train)
+
+            self.models.append(model)
+            
+    def test(self, X_test, Y_test):
+        self.X_test = X_test
+        self.Y_test = Y_test
+      
+        self._preds = self._get_model_pred()
+        self.accuracy = self._accuracy(Y_test, self._preds)
+
+        if self.verbose_test:
+            print(f"\nFinal BaggedTrees Test Accuracy: {self.accuracy}%")
+
+    def _bootstrap_samples(self, X, Y):
+        bootstrap_idx = np.random.randint(low = 0, high = Y.size, size = (X.shape[0]))
+        X_bootstrap = X[bootstrap_idx]
+        Y_bootstrap = Y[bootstrap_idx]
+        return X_bootstrap, Y_bootstrap
+           
+    def _get_model_pred(self):
+
+        all_preds = [ ]
+
+        for model in self.models:
+            _, _, pred = model.test(self.X_test, self.Y_test)
+            all_preds.append(pred)
+        all_preds = np.array(all_preds)
+
+        pred = np.apply_along_axis(self._most_common, axis = 0, arr = all_preds)
+        self._preds.append(pred)
+        return np.array(self._preds)
+
+    def _most_common(self, all_preds):
+        labels, freqs = np.unique(all_preds, return_counts = True)
+        most_common_idx = np.argmax(freqs)
+        return labels[most_common_idx]
+
+    def _accuracy(self, Y, preds):
+        acc = np.sum(Y.flatten() == preds.flatten()) / Y.size * 100
+        return acc
+
+
