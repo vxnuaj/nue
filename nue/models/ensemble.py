@@ -362,5 +362,8 @@ class MajorityClassifier:
         np_probs = np.array(self.model_probs)
         mean_probs = np.mean(np_probs, axis = 0)
         self.majority_preds = np.where(mean_probs > .5, 1, 0)
-        return self.majority_preds        
+        return self.majority_preds   
+
+
+
 

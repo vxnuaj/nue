@@ -434,45 +434,6 @@ class DecisionTree():
     def return_probs(self, return_probs):
         assert isinstance(return_probs, bool), 'return_probs must be type bool'
         self._return_probs = return_probs
-     
-        
-class Node():
-    
-    '''
-    Initializes a Node of a Decision Tree. Primarily for internal use of the `DecisionTree` class. 
-   
-    :param value: The value of the node, if the Node is a leaf or pure node.
-    :type value: float or int 
-    :param left_node: The left node of the given Node instance. Recursively grown via the `DecisionTree._grow_tree()`
-    :type left_node: Node 
-    :param right_node: The right node of the given Node instance. Recursively grown via the `DecisionTree._grow_tree()`.
-    :type right_node: Node
-    :param feature: The optimal feature index for which to split the samples within the current Node
-    :type feature: int
-    :param threshold: The optimal threshold value, within the range of the optimal feature column vector, to split the current set of samples within the current Node, into left or right Nodes.
-    :type threshold: float or int
-    ''' 
-    
-    def __init__(self, value = None, Y = None, left_node = None, right_node = None, feature = None, threshold = None):
-
-        self.value = value
-        self.Y = Y
-        self.left_node = left_node
-        self.right_node = right_node
-        self.feature = feature
-        self.threshold = threshold
-
-    def _is_leaf(self):
-        
-        '''
-        Assess if the current Node is a leaf node or not. 
-        
-        :return: A boolean value, True if self.value isn't None. Otherwise, if it is None, returns False 
-        :rtype: bool
-        ''' 
-        
-        return self.value is not None # Returns True if self.value isn't None. Otherwise, if it is None, returns False.
-
 
 class RandomTree:
     def __init__(self, verbose_train = False, n_extremely_randomized_feats = None):
@@ -633,3 +594,45 @@ class RandomTree:
             elif x[node.feature] < node.threshold:
                 node = node.left_node
         return node.value
+
+class Node():
+    
+    '''
+    Initializes a Node of a Decision Tree. Primarily for internal use of the `DecisionTree` class. 
+   
+    :param value: The value of the node, if the Node is a leaf or pure node.
+    :type value: float or int 
+    :param left_node: The left node of the given Node instance. Recursively grown via the `DecisionTree._grow_tree()`
+    :type left_node: Node 
+    :param right_node: The right node of the given Node instance. Recursively grown via the `DecisionTree._grow_tree()`.
+    :type right_node: Node
+    :param feature: The optimal feature index for which to split the samples within the current Node
+    :type feature: int
+    :param threshold: The optimal threshold value, within the range of the optimal feature column vector, to split the current set of samples within the current Node, into left or right Nodes.
+    :type threshold: float or int
+    ''' 
+    
+    def __init__(self, value = None, Y = None, left_node = None, right_node = None, feature = None, threshold = None):
+
+        self.value = value
+        self.Y = Y
+        self.left_node = left_node
+        self.right_node = right_node
+        self.feature = feature
+        self.threshold = threshold
+
+    def _is_leaf(self):
+        
+        '''
+        Assess if the current Node is a leaf node or not. 
+        
+        :return: A boolean value, True if self.value isn't None. Otherwise, if it is None, returns False 
+        :rtype: bool
+        ''' 
+        
+        return self.value is not None # Returns True if self.value isn't None. Otherwise, if it is None, returns False.
+
+
+class Stump:
+    def __init__(self):
+        pass
